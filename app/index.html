@@ -172,20 +172,23 @@
             tBody?.remove();
             if (values) {
               const highlight = makeAlternateHighlight();
+              const mergeSameDay = makeMergeSameDay();
+
               values.map(row => [row, document.createElement('tr')])
                 .forEach(([row, tr]) => {
                   header.map(col => [col, row[index.get(col)]])
                     .map(([col, value]) => [col, document.createTextNode(value), document.createElement('td')])
                     .forEach(([col, text, td]) => {
-                      td.dataset.col = col;
-                      td.appendChild(text);
-                      tr.appendChild(td);
+                        td.dataset.col = col;
+                        td.appendChild(text);
+                        tr.appendChild(td);
                     });
   
                   tr.dataset.account = row[index.get('ACCT')];
                   tr.dataset.month = new Intl.DateTimeFormat('en', { year: 'numeric', month: 'numeric' }).format(new Date(row[index.get('DT')]));
                   tr.dataset.date = row[index.get('DT')];
                   highlight(tr);
+                  mergeSameDay(tr);
                   tbody.appendChild(tr);
                 });
               tbody.addEventListener('click', handleTBodyClick);
@@ -195,14 +198,16 @@
         });
       }
       function updateUiFilterValuesTable(filter, { month, account }) {
-        const attributes = [
-          filter.has('DT') && `[data-month='${month}']`,
-          filter.has('ACCT') && `[data-account='${account}']`,
-        ].filter(Boolean).join('');
-        
         [document.querySelector('.div-values table')].filter(Boolean).forEach(table => {
           const [tbody] = Array.from(table.tBodies);
           const highlight = makeAlternateHighlight();
+          const mergeSameDay = makeMergeSameDay();
+          
+          const attributes = [
+            filter.has('DT') && `[data-month='${month}']`,
+            filter.has('ACCT') && `[data-account='${account}']`,
+          ].filter(Boolean).join('');
+
           if (attributes) {
             tbody.querySelectorAll(`tr:not(:where(tr${attributes}))`).forEach(tr => { 
               tr.classList.toggle('d-none', true);
@@ -210,11 +215,13 @@
             tbody.querySelectorAll(`tr${attributes}`).forEach(tr => { 
               tr.classList.toggle('d-none', false);
               highlight(tr);
+              mergeSameDay(tr);
             });
           } else {
             tbody.querySelectorAll('tr').forEach(tr => { 
               tr.classList.toggle('d-none', false);
               highlight(tr);
+              mergeSameDay(tr);
             });
           }
         });
@@ -260,6 +267,21 @@
             lastDt = tr.dataset.date;
           }
           tr.classList.toggle('highlighted', highlight);
+        }
+      }
+      function makeMergeSameDay() {
+        let lastDt;
+        let lastTd;
+        return function (tr) {
+          const td = Array.from(tr.cells).find(td => td.dataset.col === 'DT');
+          if (lastDt !== tr.dataset.date) {
+            lastDt = tr.dataset.date;
+            lastTd = td;
+          }
+          const isLastTd = (td === lastTd);
+          td.classList.toggle('d-none', !isLastTd);
+          td.rowSpan = 1;
+          lastTd.rowSpan += (isLastTd ? 0 : 1);
         }
       }
     </script>
