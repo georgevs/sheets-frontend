@@ -104,7 +104,7 @@
                     'shoa', 'ski', 'socj', 'sport', 'svod', 'telk', 'toplo', 
                     'unknown', 'vgsm', 'vviva'])],
 
-          ['medical expenses', new Set(['eyecare', 'gvsm', 'vgsm'])],
+          ['medical', new Set(['eyecare', 'gvsm', 'vgsm'])],
           
           ['income', new Set(['c1080', 'c9277', 'pens', 'socp'])],
           
@@ -151,7 +151,7 @@
           const index = new Map(values[0].map((x,i) => [x,i]));
           const header = values.shift().filter(x => ['DT','AMNT','ACCT'].includes(x));
           state = { index, values, accountsCategories, filter: new Set() };
-          updateUiValuesTable({ index, header, values });
+          updateUiValuesTable({ index, header, values, accountsCategories });
           updateUiSummary({ index, values, accountsCategories });
         }
         if (event.toggle) {
@@ -170,7 +170,7 @@
           }
         }
       }
-      function updateUiValuesTable({ index, header, values }) {
+      function updateUiValuesTable({ index, header, values, accountsCategories }) {
         [document.querySelector('.div-values table')].filter(Boolean).forEach(table => {
           [document.createElement('thead')].forEach(thead => {
             table.tHead?.remove();
@@ -204,9 +204,15 @@
                         tr.appendChild(td);
                     });
   
-                  tr.dataset.account = row[index.get('ACCT')];
+                  const account = row[index.get('ACCT')];
+                  tr.dataset.account = account;
                   tr.dataset.month = new Intl.DateTimeFormat('en', { year: 'numeric', month: 'numeric' }).format(new Date(row[index.get('DT')]));
                   tr.dataset.date = row[index.get('DT')];
+
+                  const categories = Array.from(accountsCategories.entries())
+                    .flatMap(([category, categoryAccounts]) => categoryAccounts.has(account) ? [category] : []);
+                  tr.classList.add(...categories);
+
                   highlight(tr);
                   mergeSameDay(tr);
                   tbody.appendChild(tr);
@@ -366,6 +372,20 @@
         color: white;
         position: sticky;
         top: 0px;
+      }
+      .div-values table tbody tr td[data-col='AMNT'] {
+        color: darkgray;
+      }
+      .div-values table tbody tr.expenses td[data-col='AMNT'] {
+        color: inherit;
+      }
+      .div-values table tbody tr.utilities td[data-col='AMNT'] {
+        font-weight: bolder;
+        color: orangered;
+      }
+      .div-values table tbody tr.income td[data-col='AMNT'] {
+        font-weight: bolder;
+        color: forestgreen;
       }
       .d-none {
         display: none;
