@@ -83,11 +83,10 @@
         .then(({ result, status }) => { 
           if (status == 200) {
             console.log('values loaded');
-            updateUi({ values: result.values });
+            updateUi({ values: result.values, accountsCategories: loadAccountsCategories() });
           }
         })
         .catch((error) => {
-          console.log('error', error);
           if (error?.status === 401 || error?.status === 403) {
             gapi.client.setToken('');
             window.localStorage.removeItem('token');
@@ -95,6 +94,23 @@
             updateUi({ unauthorized: true, loadingValuesError: error });
           }
         });
+      }
+      function loadAccountsCategories() {
+        // TODO: load from spreadhseet
+        return new Map([
+          ['expenses', new Set(['allowance', 'borica', 'carpool', 'electro', 'entertainment', 'eyecare', 
+                    'fee', 'fitness', 'food', 'games', 'groom', 'gviva', 'gvsm', 
+                    'home', 'leisure', 'metro', 'office', 'pztax', 'sbst', 'sftax', 
+                    'shoa', 'ski', 'socj', 'sport', 'svod', 'telk', 'toplo', 
+                    'unknown', 'vgsm', 'vviva'])],
+
+          ['medical expenses', new Set(['eyecare', 'gvsm', 'vgsm'])],
+          
+          ['income', new Set(['c1080', 'c9277', 'pens', 'socp'])],
+          
+          ['utilities', new Set(['electro', 'gviva', 'pztax', 'sbst', 'sftax', 'shoa', 'socj', 
+                        'svod', 'toplo', 'vviva'])],
+        ]);
       }
       function handleTBodyClick(event) {
         if (event.target instanceof HTMLTableCellElement) {
@@ -131,22 +147,26 @@
         }
         if (event.values) {
           updateUiLoadingValues({ visible: false });
-          const { values } = event;
+          const { values, accountsCategories } = event;
           const index = new Map(values[0].map((x,i) => [x,i]));
           const header = values.shift().filter(x => ['DT','AMNT','ACCT'].includes(x));
-          state = { index, filter: new Set() };
+          state = { index, values, accountsCategories, filter: new Set() };
           updateUiValuesTable({ index, header, values });
+          updateUiSummary({ index, values, accountsCategories });
         }
         if (event.toggle) {
           const { col, month, account } = event.toggle;
-          const { filter } = state;
           if (['DT','ACCT'].includes(col)) {
+            const { filter } = state;
             if (filter.has(col)) {
               filter.delete(col);
             } else {
               filter.add(col);
             }
             updateUiFilterValuesTable(filter, { month, account });
+
+            const { index, values, accountsCategories } = state;
+            updateUiSummary({ index, values, accountsCategories, filter, month, account });
           }
         }
       }
@@ -229,6 +249,7 @@
       function updateUiVisibility() {
         updateUiLogin({ visible: !client.getToken(), disabled: !!client.getToken() });
         updateUiLogout({ visible: !!client.getToken(), disabled: !client.getToken() });
+        updateUiSummary({ visible: !!client.getToken() });
         updateUiValues({ visible: !!client.getToken() });
       }
       function updateUiLogin({ visible, disabled }) {
@@ -241,6 +262,37 @@
         [document.querySelector('.btn-logout')].filter(Boolean).forEach(el => {
           el.disabled = disabled;
           el.classList.toggle('d-none', !visible);
+        });
+      }
+      function updateUiSummary({ visible, index, values, accountsCategories, filter, month, account }) {
+        [document.querySelector('.div-summary')].filter(Boolean).forEach(div => {
+          if (visible !== undefined) {
+            div.classList.toggle('d-none', !visible);
+          }
+          if (index && values && accountsCategories) {
+            [div.querySelector('p')].forEach(el => {
+
+              if (filter) {
+                if (filter.has('DT')) {
+                  values = values.filter(row => month === new Intl.DateTimeFormat('en', { year: 'numeric', month: 'numeric' }).format(new Date(row[index.get('DT')])));
+                }
+                if (filter.has('ACCT')) {
+                  values = values.filter(row => account === row[index.get('ACCT')]);
+                }
+              }
+
+              const totals = Array.from(accountsCategories.entries())
+                .map(([category, categoryAccounts]) => [
+                  category, 
+                  values.map(row => [row[index.get('ACCT')], row])
+                    .flatMap(([acct, row]) => categoryAccounts.has(acct) ? [parseFloat(row[index.get('AMNT')])] : [])
+                    .reduce((total, amnt) => total + amnt, 0)
+                ]);
+
+              const summary = totals.flatMap(([category, total]) => total ? [`${total.toFixed(2)} for ${category}`] : []).join('\n');
+              el.innerText = summary;
+            });
+          }
         });
       }
       function updateUiValues({ visible }) {
@@ -330,6 +382,9 @@
       <button class="btn-logout d-none" onclick="signOut()" disabled>Sign Out</button>
     </div>
     <p class="label-loading-values d-none">Loading values...</p>
+    <div class="div-summary d-none">
+      <p></p>
+    </div> 
     <div class="div-values d-none">
       <table></table>
     </div>
