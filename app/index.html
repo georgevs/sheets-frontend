@@ -83,7 +83,7 @@
         .then(({ result, status }) => { 
           if (status == 200) {
             console.log('values loaded');
-            updateUi({ values: result.values, accountsCategories: loadAccountsCategories() });
+            updateUi({ values: result.values, accountsByCategory: loadAccountsCategories() });
           }
         })
         .catch((error) => {
@@ -147,12 +147,12 @@
         }
         if (event.values) {
           updateUiLoadingValues({ visible: false });
-          const { values, accountsCategories } = event;
+          const { values, accountsByCategory } = event;
           const index = new Map(values[0].map((x,i) => [x,i]));
           const header = values.shift().filter(x => ['DT','AMNT','ACCT'].includes(x));
-          state = { index, values, accountsCategories, filter: new Set() };
-          updateUiValuesTable({ index, header, values, accountsCategories });
-          updateUiSummary({ index, values, accountsCategories });
+          state = { index, values, accountsByCategory, filter: new Set() };
+          updateUiValuesTable({ index, header, values, accountsByCategory });
+          updateUiSummary({ index, values, accountsByCategory });
         }
         if (event.toggle) {
           const { col, month, account } = event.toggle;
@@ -165,12 +165,12 @@
             }
             updateUiFilterValuesTable(filter, { month, account });
 
-            const { index, values, accountsCategories } = state;
-            updateUiSummary({ index, values, accountsCategories, filter, month, account });
+            const { index, values, accountsByCategory } = state;
+            updateUiSummary({ index, values, accountsByCategory, filter, month, account });
           }
         }
       }
-      function updateUiValuesTable({ index, header, values, accountsCategories }) {
+      function updateUiValuesTable({ index, header, values, accountsByCategory }) {
         [document.querySelector('.div-values table')].filter(Boolean).forEach(table => {
           [document.createElement('thead')].forEach(thead => {
             table.tHead?.remove();
@@ -209,7 +209,7 @@
                   tr.dataset.month = new Intl.DateTimeFormat('en', { year: 'numeric', month: 'numeric' }).format(new Date(row[index.get('DT')]));
                   tr.dataset.date = row[index.get('DT')];
 
-                  const categories = Array.from(accountsCategories.entries())
+                  const categories = Array.from(accountsByCategory.entries())
                     .flatMap(([category, categoryAccounts]) => categoryAccounts.has(account) ? [category] : []);
                   tr.classList.add(...categories);
 
@@ -270,33 +270,143 @@
           el.classList.toggle('d-none', !visible);
         });
       }
-      function updateUiSummary({ visible, index, values, accountsCategories, filter, month, account }) {
+      function updateUiSummary({ visible, index, values, accountsByCategory, filter, month, account }) {
         [document.querySelector('.div-summary')].filter(Boolean).forEach(div => {
           if (visible !== undefined) {
             div.classList.toggle('d-none', !visible);
           }
-          if (index && values && accountsCategories) {
+          if (index && values && accountsByCategory) {
             [div.querySelector('p')].forEach(el => {
 
               if (filter) {
-                if (filter.has('DT')) {
-                  values = values.filter(row => month === new Intl.DateTimeFormat('en', { year: 'numeric', month: 'numeric' }).format(new Date(row[index.get('DT')])));
-                }
+                // only filter acct, but dont filter by month to make stat past years
                 if (filter.has('ACCT')) {
                   values = values.filter(row => account === row[index.get('ACCT')]);
                 }
               }
 
-              const totals = Array.from(accountsCategories.entries())
-                .map(([category, categoryAccounts]) => [
-                  category, 
-                  values.map(row => [row[index.get('ACCT')], row])
-                    .flatMap(([acct, row]) => categoryAccounts.has(acct) ? [parseFloat(row[index.get('AMNT')])] : [])
-                    .reduce((total, amnt) => total + amnt, 0)
-                ]);
+              const categoriesByAccountOf = ({ accountsByCategory }) => {
+                const collectCategoriesByAccountOf = category => (categoriesByAccount, account) => {
+                  const categories = categoriesByAccount.get(account) ?? categoriesByAccount.set(account, []).get(account);
+                  categories.push(category);
+                  return categoriesByAccount;
+                };
+                const collectCategoriesByAccount = (categoriesByAccount, [category, accounts]) => {
+                  return Array.from(accounts)
+                    .reduce(collectCategoriesByAccountOf(category), categoriesByAccount);
+                };
+                return Array.from(accountsByCategory.entries())
+                  .reduce(collectCategoriesByAccount, new Map);
+              };
+                
+              const monthOf = dt => new Intl.DateTimeFormat('en', { year: 'numeric', month: 'numeric' }).format(dt);
+              const yearOf = dt => new Intl.DateTimeFormat('en', { year: 'numeric' }).format(dt);
 
-              const summary = totals.flatMap(([category, total]) => total ? [`${total.toFixed(2)} for ${category}`] : []).join('\n');
-              el.innerText = summary;
+              const field = function (col, fn) { const k = state.index.get(col); return fn ? value => fn(value[k]) : value => value[k] };
+              const fieldDt = field('DT', x => new Date(x));
+              const fieldAcct = field('ACCT');
+              const fieldAmnt = field('AMNT');
+
+              const parseMonth = month => (
+                [new RegExp(/^(\d+)\/(\d+)$/).exec(month)]
+                .filter(Boolean)
+                .flatMap(([_, m, y]) => { const dt = new Date(y, m - 1); return dt.getFullYear() ? [dt] : [] })
+              );
+              
+              const selectPeriod = ({ filter, month }) => {
+                const maybePeriodOf = (keyOf, targetKeys) => dt => {
+                  const key = keyOf(dt);
+                  return targetKeys.has(key) ? [key] : [];
+                };
+
+                if (month && filter && filter.has('DT')) {
+                  const [dt] = parseMonth(month);
+                  if (dt) {
+                    const monthOfDt = monthOf(dt); // month
+                    const lastYearMonthOfDt = monthOf(new Date(dt.getFullYear() - 1, dt.getMonth()));
+                    const targetMonths = new Set([monthOfDt, lastYearMonthOfDt]);
+                    return maybePeriodOf(monthOf, targetMonths);
+                  }
+                }
+
+                const dt = new Date();  // today
+                const yearOfDt = yearOf(new Date(dt.getFullYear(), 0));
+                const lastYearOfDt = yearOf(new Date(dt.getFullYear() - 1, 0));
+                const targetYears = new Set([yearOfDt, lastYearOfDt]);
+                return maybePeriodOf(yearOf, targetYears);
+              };
+
+              // values :: ...(dt amnt acct)
+              // expenses :: { values, maybePeriodOf } -> ...[period acct amnt]
+              const expensesOf = ({ values, maybePeriodOf }) => {
+                const maybeExpenseOf = value => {
+                  const [period] = maybePeriodOf(fieldDt(value));
+                  return period === undefined ? [] : [[period, fieldAcct(value), parseFloat(fieldAmnt(value))]];
+                };
+                return values.flatMap(maybeExpenseOf);
+              };
+
+              // expensesByCategoryOf :: { expenses, categoriesByAccount } -> { category -> expenses }
+              const expensesByCategoryOf = ({ expenses, categoriesByAccount }) => {
+                const maybeExpenseWithCategory = expense => {
+                  const categories = categoriesByAccount.get(expense[1]);
+                  return categories === undefined ? [] : categories.map(category => [category, expense]);
+                };
+                const collectExpensesByCategory = (expensesByCategory, [category, expense]) => {
+                  const expenses = (expensesByCategory.get(category) ?? expensesByCategory.set(category, []).get(category));
+                  expenses.push(expense);
+                  return expensesByCategory;
+                };
+                return expenses.flatMap(maybeExpenseWithCategory)
+                  .reduce(collectExpensesByCategory, new Map);
+              };
+
+              // totalByPeriodByCategory :: { expensesByCategory } -> { category -> { period -> total } }
+              const totalByPeriodByCategoryOf = ({ expensesByCategory }) => {
+                const collectExpensesByPeriod = (expensesByPeriod, expense) => {
+                  const expenses = expensesByPeriod.get(expense[0]) ?? expensesByPeriod.set(expense[0], []).get(expense[0]);
+                  expenses.push(expense);
+                  return expensesByPeriod;
+                };
+                const collectTotal = (total, expense) => total + expense[2];
+                const collectTotalByPeriod = (totalByPeriod, [period, expenses]) => {
+                  const total = expenses.reduce(collectTotal, 0);
+                  return totalByPeriod.set(period, total);
+                };
+                const collectTotalByPeriodByCategory = (totalByPeriodByCategory, [category, expenses]) => {
+                  const expensesByPeriod = expenses.reduce(collectExpensesByPeriod, new Map);
+                  const totalByPeriod = Array.from(expensesByPeriod)
+                    .reduce(collectTotalByPeriod, new Map);
+                  return totalByPeriodByCategory.set(category, totalByPeriod);
+                };
+                return Array.from(expensesByCategory.entries())
+                  .reduce(collectTotalByPeriodByCategory, new Map);
+              };
+
+              // summaryOf :: { totalByPeriodByCategory } -> "$total in $period,... for $category \n..."
+              const summaryOf = ({ totalByPeriodByCategory }) => {
+                const collectPeriodsSummaries = (periodsSummaries, [period, total]) => {
+                  periodsSummaries.push(`${total.toFixed(0)} in ${period}`);
+                  return periodsSummaries;
+                };
+                const collectCategorySummaries = (categorySummaries, [category, totalByPeriod]) => {
+                  const periodsSummaries = Array.from(totalByPeriod.entries())
+                    .reduce(collectPeriodsSummaries, [])
+                    .join(', and ');
+                  categorySummaries.push(`${periodsSummaries} for ${category}`);
+                  return categorySummaries;
+                };
+                return Array.from(totalByPeriodByCategory)
+                  .reduce(collectCategorySummaries, [])
+                  .join('\n');
+              };
+
+              const maybePeriodOf = selectPeriod({ filter, month });
+              const expenses = expensesOf({ values, maybePeriodOf });
+              const categoriesByAccount = categoriesByAccountOf({ accountsByCategory });
+              const expensesByCategory = expensesByCategoryOf({ expenses, categoriesByAccount });
+              const totalByPeriodByCategory = totalByPeriodByCategoryOf({ expensesByCategory });
+              el.innerText = summaryOf({ totalByPeriodByCategory });
             });
           }
         });

@@ -12,7 +12,7 @@
 ## Manage secrets
 ### Fetch secrets
 ```
-openssl enc -d -aes-128-cbc -pbkdf2 -salt -in ~/ws-archive/secrets.tar.gz.enc | tar xzv
+openssl enc -d -aes-128-cbc -pbkdf2 -salt -in ~/ws-archive/secrets.pilot.tar.gz.enc | tar xzv
 ```
 
 ## Run the app locally
@@ -34,7 +34,7 @@ docker container run --rm \
   --publish 3443:3443 \
   node npx http-server ./app -c-1 --ssl -p 3443 --cert ./certs/cert.pem --key ./certs/cert-key-nopassword.pem
 ```
-Open site at https://xps.spamfro.site:3443
+Open site at https://xps.spamfro.site:3443 (in LAN) or https://local.spamfro.site:3443 (with forward proxy)
 
 ## Run the app in GitHub pages
 
