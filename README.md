@@ -1,14 +1,5 @@
 # Sheets js 
 
-<img src="./adr/images/workspace.drawio.svg" width="500px" />
-
-## Reference
-[Google: Choose authz model](https://developers.google.com/identity/oauth2/web/guides/choose-authorization-model)  
-[Stackoverflow: API key vs. Client credentials](https://stackoverflow.com/questions/64446566/what-is-the-security-difference-between-api-keys-and-the-client-credentials-flow)  
-[Stackoverflow: API key vs. Client id](https://stackoverflow.com/questions/39181501/whats-the-difference-between-api-key-client-id-and-service-account)  
-[Google API client reference](https://github.com/google/google-api-javascript-client/blob/master/docs/reference.md)  
-[Google Sheets API reference](https://developers.google.com/sheets/api/reference/rest)  
-
 ## Manage secrets
 ### Fetch secrets
 ```
@@ -40,13 +31,13 @@ Open site at https://xps.spamfro.site:3443 (in LAN) or https://local.spamfro.sit
 
 ### Push source subtree into GitHub
 ```
-git subtree split --prefix=playground/google-apis/sheets-js -b github/sheets-js
+git subtree split --prefix playground/google-apis/sheets-js -b github/sheets-js
 git push git@github-spamfro:spamfro/sheets-js.git github/sheets-js:main
 ```
 
 ### Deploy to GitHub pages
 ```
-git subtree split --prefix=playground/google-apis/sheets-js/app -b gh-pages/sheets-js
+git subtree split --prefix playground/google-apis/sheets-js/app -b gh-pages/sheets-js
 git push git@github-spamfro:spamfro/sheets-js.git gh-pages/sheets-js:gh-pages
 ```
 Open site at https://spamfro.site/sheets-js

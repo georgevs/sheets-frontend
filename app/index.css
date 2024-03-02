@@ -1,0 +1,16 @@
+* {
+  box-sizing: border-box;
+}
+body {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  margin: 0px;
+  padding: 8px;
+  position: absolute;
+  row-gap: 8px;
+  width: 100%;
+}
+.d-none {
+  display: none;
+}
