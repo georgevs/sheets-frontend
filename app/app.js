@@ -1,15 +1,152 @@
 window.addEventListener('load', () => { window.app = new App() });
 
+
 class App {
   constructor() {
     this.services = new Services();
   }
 }
 
+
+class Dataset {
+  constructor({ values }) {
+    const index = new Map(values[0].map((x,i) => [x,i]));
+    this.rows = values.flatMap(row => {
+      try {
+        const dt = new Date(row[index.get('DT')]);
+        const amnt = Number.parseFloat(row[index.get('AMNT')]);
+        const acct = row[index.get('ACCT')].trim();
+        const isValidRow = !isNaN(dt.getFullYear()) &&
+                           !isNaN(amnt) &&
+                           acct.length > 0;
+        return isValidRow ? [new Row({ dt, amnt, acct })] : []
+      } catch {
+        return [];
+      }
+    });
+  }
+}
+
+class Row extends Array {
+  constructor({ dt, amnt, acct }) {
+    super(dt, amnt, acct);
+  }
+  dt() { return this[0] }
+  amnt() { return this[1] }
+  acct() { return this[2] }
+  month() { const dt = this.dt(); return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}` }
+  date() { const dt = this.dt(); return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}` }
+}
+
+
+class ExpensesTable {
+  constructor(el) {
+    this.el = el;
+  }
+
+  static createElement(classNames = []) {
+    const el = document.createElement('table');
+    el.classList.add('expenses', ...classNames);
+    return el;
+  }
+
+  render({ dataset, onClicked }) {
+    const header = ['DT', 'AMNT', 'ACCT'];  // also determines columns order
+
+    if (dataset) {
+      [document.createElement('thead')].forEach(thead => {
+        this.el.tHead?.remove();
+        [document.createElement('tr')].forEach(tr => {
+          header.map(col => [document.createTextNode(col), document.createElement('th')])
+            .forEach(([text, th]) => {
+              th.appendChild(text);
+              tr.appendChild(th);
+            });
+          thead.appendChild(tr);
+        });
+        this.el.appendChild(thead);
+      });
+  
+      [document.createElement('tbody')].forEach(tbody => {
+        Array.from(this.el.tBodies).shift()?.remove();
+        const highlightSameDayRows = ExpensesTable.highlightSameDayRows.bind(null, {});
+        const mergeSameDayCells = ExpensesTable.mergeSameDayCells.bind(null, { dateCellIndex: header.indexOf('DT') });
+        dataset.rows.map(row => [row, document.createElement('tr')])
+          .forEach(([row, tr]) => {
+            const rowValues = new Map([['DT', row.date()], ['AMNT', row.amnt()], ['ACCT', row.acct()]]);
+            header.map(col => [document.createTextNode(rowValues.get(col)), document.createElement('td')])
+              .forEach(([text, td]) => {
+                td.appendChild(text);
+                tr.appendChild(td);
+              });
+  
+            tr.dataset.date = row.date();
+            tr.dataset.account = row.acct();
+            tr.dataset.month = row.month();
+  
+            // const categories = Array.from(accountsByCategory.entries())
+            //   .flatMap(([category, categoryAccounts]) => categoryAccounts.has(account) ? [category] : []);
+            // tr.classList.add(...categories);
+  
+            highlightSameDayRows(tr);
+            mergeSameDayCells(tr);
+  
+            tbody.appendChild(tr);
+          });
+  
+        this.el.appendChild(tbody);
+      });
+    }
+
+    if (onClicked) {
+      function handleTBodyClick(event) {
+        if (event.target instanceof HTMLTableCellElement) {
+          const col = header[event.target.cellIndex];
+          const dataset = event.target.parentElement.dataset; // DOMStringMap
+          onClicked(Object.assign({}, dataset, { col }));
+        }
+      }
+      Array.from(this.el.tBodies).forEach(tbody => {
+        if (this.handleTBodyClick) {
+          tbody.removeEventListener('click', this.handleTBodyClick);
+        }
+        tbody.addEventListener('click', handleTBodyClick);
+      });
+      this.handleTBodyClick = handleTBodyClick;
+    }
+    
+    return this;
+  }
+
+  static highlightSameDayRows(state, tr) {
+    const date = tr.dataset.date;
+    if (state.lastDate !== date) {
+      state.lastDate = date;
+      state.highlight = !state.highlight;
+    }
+    tr.classList.toggle('highlighted', !state.highlight);
+  }
+
+  static mergeSameDayCells(state, tr) {
+    const date = tr.dataset.date;
+    const dateCell = tr.cells[state.dateCellIndex];
+    if (state.lastDate !== date) {
+      state.lastDate = date;
+      state.lastDateCell = dateCell;
+    }
+    const isLastDateCell = (dateCell === state.lastDateCell);
+    dateCell.classList.toggle('d-none', !isLastDateCell);
+    dateCell.rowSpan = 1;
+    state.lastDateCell.rowSpan += (isLastDateCell ? 0 : 1);
+  }
+}
+
+
 class Services {
   constructor() {
     this.storage = new Storage(window.localStorage);
   }
+
   async init({ token } = {}) {
     const scopes = [
       'https://www.googleapis.com/auth/spreadsheets.readonly',
@@ -38,13 +175,16 @@ class Services {
   }
 }
 
+
 class Authenticator {
   constructor(tokenClient) {
     this.tokenClient = tokenClient;
   }
+
   isSignedIn() {
     return !!window.gapi.client.getToken();
   }
+  
   signIn() {
     return new Promise((resolve, reject) => {
       this.tokenClient.callback = (token) => {
@@ -54,6 +194,7 @@ class Authenticator {
       this.tokenClient.requestAccessToken();
     });
   }
+
   signOut() {
     return new Promise((resolve, reject) => {
       const credentials = window.gapi.client.getToken();
@@ -70,10 +211,12 @@ class Authenticator {
   }
 }
 
+
 class Spreadsheets {
   constructor(sheets) {
     this.sheets = sheets;
   }
+
   getValues({ spreadsheetId, range }) {
     return this.sheets.spreadsheets.values.get({ spreadsheetId, range })
       .then(({ result: { values }}) => values)
@@ -81,10 +224,12 @@ class Spreadsheets {
   }
 }
 
+
 class Storage {
   constructor(localStorage) {
     this.localStorage = localStorage;
   }
+
   token() { return JSON.parse(window.localStorage.getItem('token')) }
   setToken(token) { this.localStorage.setItem('token', JSON.stringify(token)) }
   clearToken() { this.localStorage.removeItem('token') }

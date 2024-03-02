@@ -44,4 +44,15 @@ values = await window.app.services.spreadsheets.getValues({
 
 // error { code: 401, status: 'UNAUTHENTICATED' } if invalid token (revoked or expired)
 // error { code: 403, status: 'PERMISSION_DENIED' } if no token
+
+dataset = new Dataset({ values: values.slice(0, 10) })
+```
+### Render expense table
+```js
+onClicked = console.log.bind(console, 'onClicked')
+table = new ExpensesTable(ExpensesTable.createElement()).render({ dataset, onClicked })
+document.body.replaceChild(table.el, document.querySelector('.label-loading'))
+
+dataset = new Dataset({ values })
+table.render({ dataset })
 ```

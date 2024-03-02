@@ -14,3 +14,32 @@ body {
 .d-none {
   display: none;
 }
+
+.highlighted {
+  background-color: lightgray;
+}
+
+table.expenses {
+  border-spacing: 0px;
+  width: 100%;
+}
+table.expenses thead tr {
+  background-color: gray;
+  color: white;
+  position: sticky;
+  top: 0px;
+}
+table.expenses tbody tr td[data-col='AMNT'] {
+  color: darkgray;
+}
+table.expenses tbody tr.expenses td[data-col='AMNT'] {
+  color: inherit;
+}
+table.expenses tbody tr.utilities td[data-col='AMNT'] {
+  font-weight: bolder;
+  color: orangered;
+}
+table.expenses tbody tr.income td[data-col='AMNT'] {
+  font-weight: bolder;
+  color: forestgreen;
+}
