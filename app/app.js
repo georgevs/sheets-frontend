@@ -8,18 +8,18 @@ class App {
 }
 
 
-class Dataset {
+class ExpensesDataset {
   constructor({ values }) {
     const index = new Map(values[0].map((x,i) => [x,i]));
     this.rows = values.flatMap(row => {
       try {
-        const dt = new Date(row[index.get('DT')]);
-        const amnt = Number.parseFloat(row[index.get('AMNT')]);
-        const acct = row[index.get('ACCT')].trim();
-        const isValidRow = !isNaN(dt.getFullYear()) &&
-                           !isNaN(amnt) &&
-                           acct.length > 0;
-        return isValidRow ? [new Row({ dt, amnt, acct })] : []
+        const date = new Date(row[index.get('DT')]);
+        const amount = Number.parseFloat(row[index.get('AMNT')]);
+        const account = row[index.get('ACCT')].trim();
+        const isValidRow = !isNaN(date.getFullYear()) &&
+                           !isNaN(amount) &&
+                           account.length > 0;
+        return isValidRow ? [new ExpenseRow({ date, amount, account })] : []
       } catch {
         return [];
       }
@@ -27,15 +27,15 @@ class Dataset {
   }
 }
 
-class Row extends Array {
-  constructor({ dt, amnt, acct }) {
-    super(dt, amnt, acct);
+class ExpenseRow extends Array {
+  constructor({ date, amount, account }) {
+    super(date, amount, account);
   }
-  dt() { return this[0] }
-  amnt() { return this[1] }
-  acct() { return this[2] }
-  month() { const dt = this.dt(); return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}` }
-  date() { const dt = this.dt(); return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}` }
+  date() { return this[0] }
+  amount() { return this[1] }
+  account() { return this[2] }
+  month() { const date = this.date(); return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}` }
+  day() { const date = this.date(); return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}` }
 }
 
 
@@ -90,18 +90,18 @@ class ExpensesTable {
     return el;
   }
 
-  render({ dataset, filter, onClicked }) {
+  render({ expenses, filter, onClicked }) {
     const header = ['DT', 'AMNT', 'ACCT'];  // also determines columns order
 
-    this.renderDataset({ header, dataset });
+    this.renderExpenses({ header, expenses });
     this.applyFilter({ header, filter });
     this.updateHandlers({ header, onClicked });
 
     return this;
   }
 
-  renderDataset({ header, dataset }) {
-    if (!dataset) { return }
+  renderExpenses({ header, expenses }) {
+    if (!expenses) { return }
 
     [document.createElement('thead')].forEach(thead => {
       this.el.tHead?.remove();
@@ -118,17 +118,17 @@ class ExpensesTable {
 
     [document.createElement('tbody')].forEach(tbody => {
       Array.from(this.el.tBodies).shift()?.remove();
-      dataset.rows.map(row => [row, document.createElement('tr')])
+      expenses.rows.map(row => [row, document.createElement('tr')])
         .forEach(([row, tr]) => {
-          const rowValues = new Map([['DT', row.date()], ['AMNT', row.amnt()], ['ACCT', row.acct()]]);
+          const rowValues = new Map([['DT', row.day()], ['AMNT', row.amount()], ['ACCT', row.account()]]);
           header.map(col => [document.createTextNode(rowValues.get(col)), document.createElement('td')])
             .forEach(([text, td]) => {
               td.appendChild(text);
               tr.appendChild(td);
             });
 
-          tr.dataset.date = row.date();
-          tr.dataset.account = row.acct();
+          tr.dataset.account = row.account();
+          tr.dataset.day = row.day();
           tr.dataset.month = row.month();
 
           // const categories = Array.from(accountsByCategory.entries())
@@ -145,7 +145,7 @@ class ExpensesTable {
   applyFilter({ header, filter }) {
     Array.from(this.el.tBodies).forEach(tbody => {
       const highlightSameDayRows = ExpensesTable.highlightSameDayRows.bind(null, {});
-      const mergeSameDayCells = ExpensesTable.mergeSameDayCells.bind(null, { dateCellIndex: header.indexOf('DT') });
+      const mergeSameDayCells = ExpensesTable.mergeSameDayCells.bind(null, { dayCellIndex: header.indexOf('DT') });
 
       const attributes = !!filter && [
         filter.account && `[data-account='${filter.account}']`,
@@ -193,25 +193,25 @@ class ExpensesTable {
   }
 
   static highlightSameDayRows(state, tr) {
-    const date = tr.dataset.date;
-    if (state.lastDate !== date) {
-      state.lastDate = date;
+    const day = tr.dataset.day;
+    if (state.lastDay !== day) {
+      state.lastDay = day;
       state.highlight = !state.highlight;
     }
     tr.classList.toggle('highlighted', !state.highlight);
   }
 
   static mergeSameDayCells(state, tr) {
-    const date = tr.dataset.date;
-    const dateCell = tr.cells[state.dateCellIndex];
-    if (state.lastDate !== date) {
-      state.lastDate = date;
-      state.lastDateCell = dateCell;
+    const day = tr.dataset.day;
+    const dayCell = tr.cells[state.dayCellIndex];
+    if (state.lastDay !== day) {
+      state.lastDay = day;
+      state.lastDayCell = dayCell;
     }
-    const isLastDateCell = (dateCell === state.lastDateCell);
-    dateCell.classList.toggle('d-none', !isLastDateCell);
-    dateCell.rowSpan = 1;
-    state.lastDateCell.rowSpan += (isLastDateCell ? 0 : 1);
+    const isLastDateCell = (dayCell === state.lastDayCell);
+    dayCell.classList.toggle('d-none', !isLastDateCell);
+    dayCell.rowSpan = 1;
+    state.lastDayCell.rowSpan += (isLastDateCell ? 0 : 1);
   }
 }
 

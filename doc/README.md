@@ -38,7 +38,18 @@ await window.app.services.authenticator.signOut()
 window.app.services.storage.clearToken()
 ```
 
-### Fetch spreadsheet values
+### Fetch categories
+```js
+values = await window.app.services.spreadsheets.getValues({
+  spreadsheetId: '1UbJN1IUOu28ujbab_zkdYrPaoIS3uByk3twBACqTxh4',
+  range: 'CATX'
+})
+// error { code: 401, status: 'UNAUTHENTICATED' } if invalid token (revoked or expired)
+// error { code: 403, status: 'PERMISSION_DENIED' } if no token
+categories = new CategoriesDataset({ values })
+```
+
+### Fetch expenses
 ```js
 values = await window.app.services.spreadsheets.getValues({
   spreadsheetId: '1UbJN1IUOu28ujbab_zkdYrPaoIS3uByk3twBACqTxh4',
@@ -46,6 +57,7 @@ values = await window.app.services.spreadsheets.getValues({
 })
 // error { code: 401, status: 'UNAUTHENTICATED' } if invalid token (revoked or expired)
 // error { code: 403, status: 'PERMISSION_DENIED' } if no token
+expenses = new ExpensesDataset({ values })
 ```
 
 ### Test values
@@ -73,23 +85,22 @@ values = JSON.parse(
     [ "2023-01-13", 6.75, "fee" ]
   ]`
 )
+expenses = new ExpensesDataset({ values })
 ```
 
-### Render expense table
+### Render expenses table
 ```js
-dataset = new Dataset({ values })
 onClicked = console.log.bind(console, 'onClicked')
-table = new ExpensesTable(ExpensesTable.createElement()).render({ dataset, onClicked })
+table = new ExpensesTable(ExpensesTable.createElement()).render({ expenses, onClicked })
 document.body.replaceChild(table.el, document.querySelector('.label-loading'))
 ```
 
-### Update expense table values
+### Update expenses table
 ```js
-dataset = new Dataset({ values })
-table.render({ dataset })
+table.render({ expenses })
 ```
 
-### Filter expense table values
+### Filter expenses table
 ```js
 table.render({ filter: { } })
 table.render({ filter: { account: 'fee' } })
