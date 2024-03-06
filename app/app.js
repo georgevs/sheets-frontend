@@ -50,72 +50,106 @@ class ExpensesTable {
     return el;
   }
 
-  render({ dataset, onClicked }) {
+  render({ dataset, filter, onClicked }) {
     const header = ['DT', 'AMNT', 'ACCT'];  // also determines columns order
 
-    if (dataset) {
-      [document.createElement('thead')].forEach(thead => {
-        this.el.tHead?.remove();
-        [document.createElement('tr')].forEach(tr => {
-          header.map(col => [document.createTextNode(col), document.createElement('th')])
-            .forEach(([text, th]) => {
-              th.appendChild(text);
-              tr.appendChild(th);
-            });
-          thead.appendChild(tr);
-        });
-        this.el.appendChild(thead);
-      });
-  
-      [document.createElement('tbody')].forEach(tbody => {
-        Array.from(this.el.tBodies).shift()?.remove();
-        const highlightSameDayRows = ExpensesTable.highlightSameDayRows.bind(null, {});
-        const mergeSameDayCells = ExpensesTable.mergeSameDayCells.bind(null, { dateCellIndex: header.indexOf('DT') });
-        dataset.rows.map(row => [row, document.createElement('tr')])
-          .forEach(([row, tr]) => {
-            const rowValues = new Map([['DT', row.date()], ['AMNT', row.amnt()], ['ACCT', row.acct()]]);
-            header.map(col => [document.createTextNode(rowValues.get(col)), document.createElement('td')])
-              .forEach(([text, td]) => {
-                td.appendChild(text);
-                tr.appendChild(td);
-              });
-  
-            tr.dataset.date = row.date();
-            tr.dataset.account = row.acct();
-            tr.dataset.month = row.month();
-  
-            // const categories = Array.from(accountsByCategory.entries())
-            //   .flatMap(([category, categoryAccounts]) => categoryAccounts.has(account) ? [category] : []);
-            // tr.classList.add(...categories);
-  
-            highlightSameDayRows(tr);
-            mergeSameDayCells(tr);
-  
-            tbody.appendChild(tr);
-          });
-  
-        this.el.appendChild(tbody);
-      });
-    }
+    this.renderDataset({ header, dataset });
+    this.applyFilter({ header, filter });
+    this.updateHandlers({ header, onClicked });
 
+    return this;
+  }
+
+  renderDataset({ header, dataset }) {
+    if (!dataset) { return }
+
+    [document.createElement('thead')].forEach(thead => {
+      this.el.tHead?.remove();
+      [document.createElement('tr')].forEach(tr => {
+        header.map(col => [document.createTextNode(col), document.createElement('th')])
+          .forEach(([text, th]) => {
+            th.appendChild(text);
+            tr.appendChild(th);
+          });
+        thead.appendChild(tr);
+      });
+      this.el.appendChild(thead);
+    });
+
+    [document.createElement('tbody')].forEach(tbody => {
+      Array.from(this.el.tBodies).shift()?.remove();
+      dataset.rows.map(row => [row, document.createElement('tr')])
+        .forEach(([row, tr]) => {
+          const rowValues = new Map([['DT', row.date()], ['AMNT', row.amnt()], ['ACCT', row.acct()]]);
+          header.map(col => [document.createTextNode(rowValues.get(col)), document.createElement('td')])
+            .forEach(([text, td]) => {
+              td.appendChild(text);
+              tr.appendChild(td);
+            });
+
+          tr.dataset.date = row.date();
+          tr.dataset.account = row.acct();
+          tr.dataset.month = row.month();
+
+          // const categories = Array.from(accountsByCategory.entries())
+          //   .flatMap(([category, categoryAccounts]) => categoryAccounts.has(account) ? [category] : []);
+          // tr.classList.add(...categories);
+
+          tbody.appendChild(tr);
+        });
+
+      this.el.appendChild(tbody);
+    });
+  }
+
+  applyFilter({ header, filter }) {
+    Array.from(this.el.tBodies).forEach(tbody => {
+      const highlightSameDayRows = ExpensesTable.highlightSameDayRows.bind(null, {});
+      const mergeSameDayCells = ExpensesTable.mergeSameDayCells.bind(null, { dateCellIndex: header.indexOf('DT') });
+
+      const attributes = !!filter && [
+        filter.account && `[data-account='${filter.account}']`,
+        filter.month && `[data-month='${filter.month}']`,
+      ].filter(Boolean).join('');
+
+      if (attributes) {
+        tbody.querySelectorAll(`tr:not(:where(tr${attributes}))`).forEach(tr => { 
+          tr.classList.toggle('d-none', true);
+        });
+        tbody.querySelectorAll(`tr${attributes}`).forEach(tr => { 
+          tr.classList.toggle('d-none', false);
+          highlightSameDayRows(tr);
+          mergeSameDayCells(tr);
+        });
+      } else {
+        tbody.querySelectorAll('tr').forEach(tr => { 
+          tr.classList.toggle('d-none', false);
+          highlightSameDayRows(tr);
+          mergeSameDayCells(tr);
+        });
+      }
+    });
+  }
+
+  updateHandlers({ header, onClicked }) {
     if (onClicked) {
-      function handleTBodyClick(event) {
-        if (event.target instanceof HTMLTableCellElement) {
-          const col = header[event.target.cellIndex];
-          const dataset = event.target.parentElement.dataset; // DOMStringMap
-          onClicked(Object.assign({}, dataset, { col }));
-        }
+      if (this.removeClickedHandler) {
+        this.removeClickedHandler();
       }
       Array.from(this.el.tBodies).forEach(tbody => {
-        if (this.handleTBodyClick) {
-          tbody.removeEventListener('click', this.handleTBodyClick);
+        function handleTBodyClick(event) {
+          if (event.target instanceof HTMLTableCellElement) {
+            const col = header[event.target.cellIndex];
+            const dataset = event.target.parentElement.dataset; // DOMStringMap
+            onClicked(Object.assign({}, dataset, { col }));
+          }
         }
         tbody.addEventListener('click', handleTBodyClick);
+        this.removeClickedHandler = () => {
+          tbody.removeEventListener('click', handleTBodyClick);
+        };
       });
-      this.handleTBodyClick = handleTBodyClick;
     }
-    
-    return this;
   }
 
   static highlightSameDayRows(state, tr) {

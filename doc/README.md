@@ -17,11 +17,13 @@
 
 
 ## Playground
+
 ### Init
 ```js
 token = window.app.services.storage.token();
 await window.app.services.init({ token })
 ```
+
 ### Authenticate
 ```js
 // check authenticated
@@ -35,24 +37,62 @@ window.app.services.storage.setToken(token)
 await window.app.services.authenticator.signOut()
 window.app.services.storage.clearToken()
 ```
+
 ### Fetch spreadsheet values
 ```js
 values = await window.app.services.spreadsheets.getValues({
   spreadsheetId: '1UbJN1IUOu28ujbab_zkdYrPaoIS3uByk3twBACqTxh4',
   range: 'BAL'
 })
-
 // error { code: 401, status: 'UNAUTHENTICATED' } if invalid token (revoked or expired)
 // error { code: 403, status: 'PERMISSION_DENIED' } if no token
-
-dataset = new Dataset({ values: values.slice(0, 10) })
 ```
+
+### Test values
+```js
+values = JSON.parse(
+  `[
+    [ "DT", "AMNT", "ACCT" ],
+    [ "2024-02-29", 100.75, "food" ],
+    [ "2024-02-27", 200.75, "games" ],
+    [ "2024-02-26", 300.75, "fitness" ],
+    [ "2024-02-26", 400.75, "food" ],
+    [ "2024-02-25", 500.75, "leisure" ],
+    [ "2024-02-23", 600.75, "fee" ],
+    [ "2024-01-19", 10.75, "food" ],
+    [ "2024-01-17", 20.75, "games" ],
+    [ "2024-01-16", 30.75, "fitness" ],
+    [ "2024-01-16", 40.75, "food" ],
+    [ "2024-01-15", 50.75, "leisure" ],
+    [ "2024-01-13", 60.75, "fee" ],
+    [ "2023-01-19", 1.75, "food" ],
+    [ "2023-01-17", 2.75, "games" ],
+    [ "2023-01-16", 3.75, "fitness" ],
+    [ "2023-01-16", 4.75, "food" ],
+    [ "2023-01-15", 5.75, "leisure" ],
+    [ "2023-01-13", 6.75, "fee" ]
+  ]`
+)
+```
+
 ### Render expense table
 ```js
+dataset = new Dataset({ values })
 onClicked = console.log.bind(console, 'onClicked')
 table = new ExpensesTable(ExpensesTable.createElement()).render({ dataset, onClicked })
 document.body.replaceChild(table.el, document.querySelector('.label-loading'))
+```
 
+### Update expense table values
+```js
 dataset = new Dataset({ values })
 table.render({ dataset })
+```
+
+### Filter expense table values
+```js
+table.render({ filter: { } })
+table.render({ filter: { account: 'fee' } })
+table.render({ filter: { month: '2024-01' } })
+table.render({ filter: { account: 'fee', month: '2024-01' } })
 ```
