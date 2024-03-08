@@ -1,7 +1,9 @@
 class ExpensesDataset {
   constructor({ values }) {
     const index = new Map(values[0].map((x,i) => [x,i]));
-    this.rows = values.flatMap(row => {
+    this.rows = [];
+    for (let i = 1; i < values.length; ++i) {
+      const row = values[i];
       try {
         const date = new Date(row[index.get('DT')]);
         const amount = Number.parseFloat(row[index.get('AMNT')]);
@@ -9,11 +11,11 @@ class ExpensesDataset {
         const isValidRow = !isNaN(date.getFullYear()) &&
                            !isNaN(amount) &&
                            account.length > 0;
-        return isValidRow ? [new ExpenseRow({ date, amount, account })] : []
+        if (isValidRow) { this.rows.push(new ExpenseRow({ date, amount, account })) }
       } catch {
-        return [];
+        // noop
       }
-    });
+    }
   }
 }
 
@@ -66,4 +68,70 @@ class CategoryRow extends Array {
   }
   account() { return this[0] }
   categories() { return this[1] }
+}
+
+class SummaryToDateDataset {
+  constructor({ expenses, date }) {
+    const prevYearDate = new Date(date.getFullYear()-1, 0);
+
+    const selectInDateInterval = (row) => (prevYearDate <= row.date() && row.date() <= date);
+
+    const orderByAccountAndReverseDate = (lhs, rhs) => {
+      let r = lhs.account().localeCompare(rhs.account());
+      if (r == 0) {
+        r = rhs.date() - lhs.date();
+      }
+      return r;
+    };
+
+    const rowAccount = (row) => row.account();
+
+    const totalAmount = (year, rows) => (
+      rows.filter(row => row.date().getFullYear() == year)
+        .reduce((acc, row) => acc + row.amount(), 0)
+    );
+    
+    const summary = (account, expenses) => ({ 
+      account: account,
+      yearToDateTotal: totalAmount(date.getFullYear(), expenses),
+      prevYearTotal: totalAmount(prevYearDate.getFullYear(), expenses),
+      lastDate: expenses[0].date(),
+      lastAmount: expenses[0].amount()
+    });
+
+    let result = expenses.rows;
+    result = result.filter(selectInDateInterval);
+    result = result.sort(orderByAccountAndReverseDate);
+    result = Array.from(result.groupBy(rowAccount));
+    result = result.map(([account, expenses]) => new SummaryRow(summary(account, expenses)));
+
+    this.rows = result;
+  }
+}
+
+class SummaryRow extends Array {
+  constructor({ account, yearToDateTotal, prevYearTotal, lastDate, lastAmount }) {
+    super(account, yearToDateTotal, prevYearTotal, lastDate, lastAmount);
+  }
+  account() { return this[0] }
+  yearToDateTotal() { return this[1] }
+  prevYearTotal() { return this[2] }
+  lastDate() { return this[3] }
+  lastAmount() { return this[4] }
+}
+
+Array.prototype.shuffle = function () {  // Knuth shuffle
+  for (let i = 0; i < this.length; ++i) {
+      const j = (Math.random() * (i+1)) | 0;
+      const t = this[i]; this[i] = this[j]; this[j] = t;
+  }
+  return this;
+}
+
+Array.prototype.groupBy = function (fn) {
+  return this.reduce((acc, x) => {
+    const k = fn(x);
+    (acc.get(k) ?? acc.set(k, []).get(k)).push(x);
+    return acc;
+  }, new Map);
 }
