@@ -31,13 +31,19 @@ class SummaryTable {
         .forEach(([row, tr]) => {
           const rowValues = new Map([
             ['ACCT', row.account()],
-            ['YTDT', Format.amount(row.yearToDateTotal())],
-            ['PYT', Format.amount(row.prevYearTotal())],
-            ['LDT', Format.day(row.lastDate())],
             ['LAMNT', Format.amount(row.lastAmount())],
+            ['LDT', Format.weekDay(row.lastDate())],
+            ['PYT', Format.amount(row.prevYearTotal())],
+            ['YTDT', Format.amount(row.yearToDateTotal())],
           ]);
-          header.map(col => [document.createTextNode(rowValues.get(col)), document.createElement('td')])
-            .forEach(([text, td]) => {
+          const colClassNames = new Map([
+            ['LAMNT', ['amount']],
+            ['PYT', ['amount']],
+            ['YTDT', ['amount']],
+          ]);
+          header.map(col => [colClassNames.get(col), document.createTextNode(rowValues.get(col)), document.createElement('td')])
+            .forEach(([classNames, text, td]) => {
+              if (classNames) { td.classList.add(...classNames) }
               td.appendChild(text);
               tr.appendChild(td);
             });

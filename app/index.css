@@ -32,6 +32,12 @@ table.expenses thead tr {
 table.expenses tbody tr td[data-col='AMNT'] {
   color: darkgray;
 }
+table.expenses tbody td {
+  padding: 0px 5px;
+}
+table.expenses tbody td.amount {
+  text-align: right;
+}
 table.expenses tbody tr.expenses td[data-col='AMNT'] {
   color: inherit;
 }
@@ -53,4 +59,10 @@ table.summary thead tr {
   color: white;
   position: sticky;
   top: 0px;
+}
+table.summary tbody td {
+  padding: 0px 5px;
+}
+table.summary tbody td.amount {
+  text-align: right;
 }

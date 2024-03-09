@@ -136,6 +136,8 @@ Array.prototype.groupBy = function (fn) {
 
 class Format {
   static day(dt) { return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}` }
+  static weekDay(dt) { return `${Format.weekday[dt.getDay()]} ${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}` }
   static month(dt) { return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}` }
-  static amount(amnt) { return amnt.toFixed(2) }
+  static amount(amnt) { return amnt.toFixed(0) }
+  static weekday = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 }

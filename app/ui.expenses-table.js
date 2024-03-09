@@ -40,12 +40,16 @@ class ExpensesTable {
       expenses.rows.map(row => [row, document.createElement('tr')])
         .forEach(([row, tr]) => {
           const rowValues = new Map([
-            ['DT', Format.day(row.date())], 
+            ['ACCT', row.account()],
             ['AMNT', Format.amount(row.amount())], 
-            ['ACCT', row.account()]
+            ['DT', Format.weekDay(row.date())], 
           ]);
-          header.map(col => [document.createTextNode(rowValues.get(col)), document.createElement('td')])
-            .forEach(([text, td]) => {
+          const colClassNames = new Map([
+            ['AMNT', ['amount']],
+          ]);
+          header.map(col => [colClassNames.get(col), document.createTextNode(rowValues.get(col)), document.createElement('td')])
+            .forEach(([classNames, text, td]) => {
+              if (classNames) { td.classList.add(...classNames) }
               td.appendChild(text);
               tr.appendChild(td);
             });
