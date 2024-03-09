@@ -10,7 +10,7 @@ class SummaryTable {
   }
 
   render({ summary }) {
-    const header = ['ACCT', 'YTD', 'LY', 'LDT', 'LAMNT'];  // also determines columns order
+    const header = ['ACCT', 'YTDT', 'PYT', 'LDT', 'LAMNT'];  // also determines columns order
 
     [document.createElement('thead')].forEach(thead => {
       this.el.tHead?.remove();
@@ -25,22 +25,28 @@ class SummaryTable {
       this.el.appendChild(thead);
     });
 
-    // [document.createElement('tbody')].forEach(tbody => {
-    //   Array.from(this.el.tBodies).shift()?.remove();
-    //   expenses.rows.map(row => [row, document.createElement('tr')])
-    //     .forEach(([row, tr]) => {
-    //       const rowValues = new Map([['DT', row.day()], ['AMNT', row.amount()], ['ACCT', row.account()]]);
-    //       header.map(col => [document.createTextNode(rowValues.get(col)), document.createElement('td')])
-    //         .forEach(([text, td]) => {
-    //           td.appendChild(text);
-    //           tr.appendChild(td);
-    //         });
+    [document.createElement('tbody')].forEach(tbody => {
+      Array.from(this.el.tBodies).shift()?.remove();
+      summary.rows.map(row => [row, document.createElement('tr')])
+        .forEach(([row, tr]) => {
+          const rowValues = new Map([
+            ['ACCT', row.account()],
+            ['YTDT', row.yearToDateTotal()],
+            ['PYT', row.prevYearTotal()],
+            ['LDT', row.lastDay()],
+            ['LAMNT', row.lastAmount()],
+          ]);
+          header.map(col => [document.createTextNode(rowValues.get(col)), document.createElement('td')])
+            .forEach(([text, td]) => {
+              td.appendChild(text);
+              tr.appendChild(td);
+            });
 
-    //       tbody.appendChild(tr);
-    //     });
+          tbody.appendChild(tr);
+        });
 
-    //   this.el.appendChild(tbody);
-    // });
+      this.el.appendChild(tbody);
+    });
 
     return this;
   }

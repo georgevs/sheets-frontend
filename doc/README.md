@@ -107,3 +107,13 @@ table.render({ filter: { account: 'fee' } })
 table.render({ filter: { month: '2024-01' } })
 table.render({ filter: { account: 'fee', month: '2024-01' } })
 ```
+
+### Summary dataset
+```js
+summary = new SummaryToDateDataset({ expenses, date: new Date() })
+```
+### Render summary table
+```js
+table = new SummaryTable(SummaryTable.createElement()).render({ summary })
+document.body.replaceChild(table.el, document.querySelector('.label-loading'))
+```

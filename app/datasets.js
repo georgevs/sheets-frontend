@@ -118,6 +118,7 @@ class SummaryRow extends Array {
   prevYearTotal() { return this[2] }
   lastDate() { return this[3] }
   lastAmount() { return this[4] }
+  lastDay() { const date = this.lastDate(); return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}` }
 }
 
 Array.prototype.shuffle = function () {  // Knuth shuffle
