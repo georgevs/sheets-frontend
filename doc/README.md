@@ -20,44 +20,44 @@
 
 ### Init
 ```js
-token = window.app.services.storage.token();
-await window.app.services.init({ token })
+token = app.services.storage.token();
+await app.services.init({ token })
 ```
 
 ### Authenticate
 ```js
 // check authenticated
-window.app.services.authenticator.isSignedIn()
+app.services.authenticator.isSignedIn()
 
 // authenticate
-token = await window.app.services.authenticator.signIn()
-window.app.services.storage.setToken(token)
+token = await app.services.authenticator.signIn()
+app.services.storage.setToken(token)
 
 // revoke token
-await window.app.services.authenticator.signOut()
-window.app.services.storage.clearToken()
+await app.services.authenticator.signOut()
+app.services.storage.clearToken()
 ```
 
 ### Fetch categories
 ```js
-values = await window.app.services.spreadsheets.getValues({
+values = await app.services.spreadsheets.getValues({
   spreadsheetId: '1UbJN1IUOu28ujbab_zkdYrPaoIS3uByk3twBACqTxh4',
   range: 'CATX'
 })
 // error { code: 401, status: 'UNAUTHENTICATED' } if invalid token (revoked or expired)
 // error { code: 403, status: 'PERMISSION_DENIED' } if no token
-categories = new CategoriesDataset({ values })
+app.datasets.categories = new CategoriesDataset({ values })
 ```
 
 ### Fetch expenses
 ```js
-values = await window.app.services.spreadsheets.getValues({
+values = await app.services.spreadsheets.getValues({
   spreadsheetId: '1UbJN1IUOu28ujbab_zkdYrPaoIS3uByk3twBACqTxh4',
   range: 'BAL'
 })
 // error { code: 401, status: 'UNAUTHENTICATED' } if invalid token (revoked or expired)
 // error { code: 403, status: 'PERMISSION_DENIED' } if no token
-expenses = new ExpensesDataset({ values })
+app.datasets.expenses = new ExpensesDataset({ values })
 ```
 
 ### Test values
@@ -85,35 +85,43 @@ values = JSON.parse(
     [ "2023-01-13", 6.75, "fee" ]
   ]`
 )
-expenses = new ExpensesDataset({ values })
+app.datasets.expenses = new ExpensesDataset({ values })
 ```
 
 ### Render expenses table
 ```js
 onClicked = console.log.bind(console, 'onClicked')
-table = new ExpensesTable(ExpensesTable.createElement()).render({ expenses, onClicked })
-document.body.replaceChild(table.el, document.querySelector('.label-loading'))
+app.ui.expenses = new ExpensesTable(ExpensesTable.createElement())
+  .render({ expenses: app.datasets.expenses, onClicked })
+document.body.replaceChild(app.ui.expenses.el, document.querySelector('.label-loading'))
 ```
 
 ### Update expenses table
 ```js
-table.render({ expenses })
+app.ui.expenses.render({ expenses })
 ```
 
 ### Filter expenses table
 ```js
-table.render({ filter: { } })
-table.render({ filter: { account: 'fee' } })
-table.render({ filter: { month: '2024-01' } })
-table.render({ filter: { account: 'fee', month: '2024-01' } })
+app.ui.expenses.render({ filter: { } })
+app.ui.expenses.render({ filter: { account: 'fee' } })
+app.ui.expenses.render({ filter: { month: '2024-01' } })
+app.ui.expenses.render({ filter: { account: 'fee', month: '2024-01' } })
 ```
 
 ### Summary dataset
 ```js
-summary = new SummaryToDateDataset({ expenses, date: new Date() })
+app.datasets.summary = new SummaryToDateDataset({ expenses: app.datasets.expenses, date: new Date() })
 ```
 ### Render summary table
 ```js
-table = new SummaryTable(SummaryTable.createElement()).render({ summary })
-document.body.replaceChild(table.el, document.querySelector('.label-loading'))
+app.ui.summary = new SummaryTable(SummaryTable.createElement())
+  .render({ summary: app.datasets.summary })
+document.body.replaceChild(app.ui.summary.el, document.querySelector('.label-loading'))
+```
+
+### Swap tables
+```js
+document.body.replaceChild(app.ui.summary.el, app.ui.expenses.el)
+document.body.replaceChild(app.ui.expenses.el, app.ui.summary.el)
 ```
