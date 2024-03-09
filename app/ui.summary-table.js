@@ -31,10 +31,10 @@ class SummaryTable {
         .forEach(([row, tr]) => {
           const rowValues = new Map([
             ['ACCT', row.account()],
-            ['YTDT', row.yearToDateTotal()],
-            ['PYT', row.prevYearTotal()],
-            ['LDT', row.lastDay()],
-            ['LAMNT', row.lastAmount()],
+            ['YTDT', Format.amount(row.yearToDateTotal())],
+            ['PYT', Format.amount(row.prevYearTotal())],
+            ['LDT', Format.day(row.lastDate())],
+            ['LAMNT', Format.amount(row.lastAmount())],
           ]);
           header.map(col => [document.createTextNode(rowValues.get(col)), document.createElement('td')])
             .forEach(([text, td]) => {

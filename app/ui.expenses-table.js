@@ -39,7 +39,11 @@ class ExpensesTable {
       Array.from(this.el.tBodies).shift()?.remove();
       expenses.rows.map(row => [row, document.createElement('tr')])
         .forEach(([row, tr]) => {
-          const rowValues = new Map([['DT', row.day()], ['AMNT', row.amount()], ['ACCT', row.account()]]);
+          const rowValues = new Map([
+            ['DT', Format.day(row.date())], 
+            ['AMNT', Format.amount(row.amount())], 
+            ['ACCT', row.account()]
+          ]);
           header.map(col => [document.createTextNode(rowValues.get(col)), document.createElement('td')])
             .forEach(([text, td]) => {
               td.appendChild(text);
@@ -47,8 +51,8 @@ class ExpensesTable {
             });
 
           tr.dataset.account = row.account();
-          tr.dataset.day = row.day();
-          tr.dataset.month = row.month();
+          tr.dataset.day = Format.day(row.date());
+          tr.dataset.month = Format.month(row.date());
 
           // const categories = Array.from(accountsByCategory.entries())
           //   .flatMap(([category, categoryAccounts]) => categoryAccounts.has(account) ? [category] : []);

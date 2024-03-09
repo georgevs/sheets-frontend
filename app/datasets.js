@@ -26,8 +26,6 @@ class ExpenseRow extends Array {
   date() { return this[0] }
   amount() { return this[1] }
   account() { return this[2] }
-  month() { const date = this.date(); return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}` }
-  day() { const date = this.date(); return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}` }
 }
 
 
@@ -118,7 +116,6 @@ class SummaryRow extends Array {
   prevYearTotal() { return this[2] }
   lastDate() { return this[3] }
   lastAmount() { return this[4] }
-  lastDay() { const date = this.lastDate(); return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}` }
 }
 
 Array.prototype.shuffle = function () {  // Knuth shuffle
@@ -135,4 +132,10 @@ Array.prototype.groupBy = function (fn) {
     (acc.get(k) ?? acc.set(k, []).get(k)).push(x);
     return acc;
   }, new Map);
+}
+
+class Format {
+  static day(dt) { return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}` }
+  static month(dt) { return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}` }
+  static amount(amnt) { return amnt.toFixed(2) }
 }
