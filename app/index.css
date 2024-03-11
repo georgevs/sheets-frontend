@@ -20,7 +20,7 @@ body {
 }
 
 table.expenses {
-  border-spacing: 0px;
+  border-collapse: collapse;
   width: 100%;
 }
 table.expenses thead tr {
@@ -51,7 +51,7 @@ table.expenses tbody tr.income td[data-col='AMNT'] {
 }
 
 table.summary {
-  border-spacing: 0px;
+  border-collapse: collapse;
   width: 100%;
 }
 table.summary thead tr {
@@ -65,4 +65,38 @@ table.summary tbody td {
 }
 table.summary tbody td.amount {
   text-align: right;
+}
+
+
+
+
+table.test {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+table.test thead tr {
+  background-color: gray;
+  color: white;
+  position: sticky;
+  top: 0px;
+}
+
+table.test tbody tr {
+  /* background-color: lightgreen; */
+}
+
+
+table.test tbody tr.total {
+  /* background-color: lightblue; */
+}
+
+table.test tbody tr.total td {
+  /* padding-bottom: 10px; */
+  border-top: 1px solid;
+}
+
+table.test tbody tr.all td {
+  /* padding-bottom: inherit; */
+  border-top: 3px double;
 }

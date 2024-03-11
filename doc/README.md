@@ -93,7 +93,7 @@ app.datasets.expenses = new ExpensesDataset({ values })
 onClicked = console.log.bind(console, 'onClicked')
 app.ui.expenses = new ExpensesTable(ExpensesTable.createElement())
   .render({ expenses: app.datasets.expenses, onClicked })
-document.body.replaceChild(app.ui.expenses.el, document.querySelector('.label-loading'))
+document.body.replaceChild(app.ui.expenses.el, document.body.querySelector('.label-loading'))
 ```
 
 ### Update expenses table
@@ -117,11 +117,135 @@ app.datasets.summary = new SummaryToDateDataset({ expenses: app.datasets.expense
 ```js
 app.ui.summary = new SummaryTable(SummaryTable.createElement())
   .render({ summary: app.datasets.summary })
-document.body.replaceChild(app.ui.summary.el, document.querySelector('.label-loading'))
+document.body.replaceChild(app.ui.summary.el, document.body.querySelector('.label-loading'))
 ```
 
 ### Swap tables
 ```js
 document.body.replaceChild(app.ui.summary.el, app.ui.expenses.el)
 document.body.replaceChild(app.ui.expenses.el, app.ui.summary.el)
+```
+
+### Summary with total expenses per category
+```html
+<html lang="en">
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        margin: 0px;
+        padding: 8px;
+        position: absolute;
+        row-gap: 8px;
+        width: 100%;
+      }
+      table.summary {
+        border-collapse: collapse;
+        width: 100%;
+      }
+      table.summary thead tr {
+        background-color: gray;
+        color: white;
+        position: sticky;
+        top: 0px;
+      }
+      table.summary tbody tr:has(+tr.total) td {
+        padding-bottom: 10px;
+      }
+      table.summary tbody tr.total {
+        border-top: 1px solid black;  
+      }
+      table.summary tbody tr.total td {
+        padding-bottom: 20px;  
+      }
+      table.summary tbody tr:last-child {
+        border-top: 3px double black; 
+      }
+      table.summary tbody tr:last-child td {
+        padding-bottom: inherit;
+      }
+    </style>
+  </head>
+  <body>
+    <table class="summary">
+      <thead>
+        <tr>
+          <th>ACCT</th>
+          <th>YTDT</th>
+          <th>LYT</th>
+          <th>LDT</th>
+          <th>LAMNT</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>pens</td>
+          <td>200</td>
+          <td>1200</td>
+          <td>2/10/2024</td>
+          <td>100</td>
+        </tr>
+        <tr>
+          <td>c1080</td>
+          <td>200</td>
+          <td>1200</td>
+          <td>2/10/2024</td>
+          <td>100</td>
+        </tr>
+        <tr class="total">
+          <td>ALL INCOME</td>
+          <td>400</td>
+          <td>2400</td>
+          <td colspan="2"></td>
+        </tr>
+        <tr>
+          <td>toplo</td>
+          <td>200</td>
+          <td>1200</td>
+          <td>2/10/2024</td>
+          <td>100</td>
+        </tr>
+        <tr>
+          <td>sbst</td>
+          <td>200</td>
+          <td>1200</td>
+          <td>2/10/2024</td>
+          <td>100</td>
+        </tr>
+        <tr class="total">
+          <td>UTILITIES</td>
+          <td>400</td>
+          <td>2400</td>
+          <td colspan="2"></td>
+        </tr>
+        <tr>
+          <td>food</td>
+          <td>200</td>
+          <td>1200</td>
+          <td>2/10/2024</td>
+          <td>100</td>
+        </tr>
+        <tr>
+          <td>leisure</td>
+          <td>200</td>
+          <td>1200</td>
+          <td>2/10/2024</td>
+          <td>100</td>
+        </tr>
+        <tr class="total">
+          <td>ALL EXPENSES</td>
+          <td>800</td>
+          <td>4800</td>
+          <td colspan="2"></td>
+        </tr>
+      </tbody>
+    </table>
+  </body>
+</html>
 ```
