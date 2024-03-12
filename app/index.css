@@ -66,37 +66,18 @@ table.summary tbody td {
 table.summary tbody td.amount {
   text-align: right;
 }
-
-
-
-
-table.test {
-  border-collapse: collapse;
-  width: 100%;
+table.summary tbody tr:has(+tr.total) td {
+  padding-bottom: 10px;
 }
-
-table.test thead tr {
-  background-color: gray;
-  color: white;
-  position: sticky;
-  top: 0px;
+table.summary tbody tr.total {
+  border-top: 1px solid black;  
 }
-
-table.test tbody tr {
-  /* background-color: lightgreen; */
+table.summary tbody tr.all {
+  border-top: 3px double black; 
 }
-
-
-table.test tbody tr.total {
-  /* background-color: lightblue; */
+table.summary tbody tr.total td {
+  padding-bottom: 20px;  
 }
-
-table.test tbody tr.total td {
-  /* padding-bottom: 10px; */
-  border-top: 1px solid;
-}
-
-table.test tbody tr.all td {
-  /* padding-bottom: inherit; */
-  border-top: 3px double;
+table.summary tbody tr:last-child td {
+  padding-bottom: inherit;
 }

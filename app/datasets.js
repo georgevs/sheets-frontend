@@ -69,10 +69,10 @@ class CategoryRow extends Array {
 }
 
 class SummaryToDateDataset {
-  constructor({ expenses, date }) {
-    const prevYearDate = new Date(date.getFullYear()-1, 0);
+  constructor({ expenses, categories, yearToDate }) {
+    const prevYearDate = new Date(yearToDate.getFullYear()-1, 0);
 
-    const selectInDateInterval = (row) => (prevYearDate <= row.date() && row.date() <= date);
+    const selectInDateInterval = (row) => (prevYearDate <= row.date() && row.date() <= yearToDate);
 
     const orderByAccountAndReverseDate = (lhs, rhs) => {
       let r = lhs.account().localeCompare(rhs.account());
@@ -89,33 +89,82 @@ class SummaryToDateDataset {
         .reduce((acc, row) => acc + row.amount(), 0)
     );
     
-    const summary = (account, expenses) => ({ 
-      account: account,
-      yearToDateTotal: totalAmount(date.getFullYear(), expenses),
-      prevYearTotal: totalAmount(prevYearDate.getFullYear(), expenses),
-      lastDate: expenses[0].date(),
-      lastAmount: expenses[0].amount()
+    const summary = (rows) => ({ 
+      yearToDateTotal: totalAmount(yearToDate.getFullYear(), rows),
+      prevYearTotal: totalAmount(prevYearDate.getFullYear(), rows),
+      lastDate: rows[0].date(),
+      lastAmount: rows[0].amount()
     });
 
-    let result = expenses.rows;
-    result = result.filter(selectInDateInterval);
-    result = result.sort(orderByAccountAndReverseDate);
-    result = Array.from(result.groupBy(rowAccount));
-    result = result.map(([account, expenses]) => new SummaryRow(summary(account, expenses)));
+    const summaryRowsOf = ({ expenses }) => {
+      let rows = expenses.rows;
+      rows = rows.filter(selectInDateInterval);
+      rows = rows.sort(orderByAccountAndReverseDate);
+      rows = Array.from(rows.groupBy(rowAccount));
+      return rows.map(([account, rows]) => new SummaryRow(Object.assign({ account }, summary(rows))));
+    };
 
-    this.rows = result;
+    const totalSummaryAmount = (summaryRows) => ({ 
+      yearToDateTotal: summaryRows.reduce((acc, row) => acc + row.yearToDateTotal(), 0),
+      prevYearTotal: summaryRows.reduce((acc, row) => acc + row.prevYearTotal(), 0),
+    });
+
+    const categorySummaryOf = ({ categories, summaryRows }) => {
+      const expensesAccounts = categories.categoryAccounts.get('expense');
+      const incomeAccounts = categories.categoryAccounts.get('income');
+      const utilitiesAccounts = categories.categoryAccounts.get('utilities');
+  
+      const expensesSummaryRows = summaryRows.filter(row => expensesAccounts.has(row.account()));
+      const incomeSummaryRows = summaryRows.filter(row => incomeAccounts.has(row.account()));
+      const utilitiesSummaryRows = summaryRows.filter(row => utilitiesAccounts.has(row.account()));
+
+      const expensesNoUtilitiesSummaryRows = expensesSummaryRows.filter(row => !utilitiesAccounts.has(row.account()));
+      
+      const expensesTotalSummaryRow = new SummaryRow(
+        Object.assign({ label:'ALL EXPENSES', kind:'all' }, totalSummaryAmount(expensesSummaryRows))
+      );
+      const incomeTotalSummaryRow = new SummaryRow(
+        Object.assign({ label: 'ALL INCOME', kind: 'all' }, totalSummaryAmount(incomeSummaryRows))
+      );
+      const utilitiesTotalSummaryRow = new SummaryRow(
+        Object.assign({ label:'UTILITIES', kind:'total' }, totalSummaryAmount(utilitiesSummaryRows))
+      );
+
+      const categorySummary = new Map([
+        ['expense', expensesNoUtilitiesSummaryRows],
+        ['income', incomeSummaryRows],
+        ['utilities', utilitiesSummaryRows],
+      ]);
+
+      const categoryTotalSummary = new Map([
+        ['expense', expensesTotalSummaryRow],
+        ['income', incomeTotalSummaryRow],
+        ['utilities', utilitiesTotalSummaryRow],
+      ]);
+  
+      return { categorySummary, categoryTotalSummary };
+    };
+
+    const summaryRows = summaryRowsOf({ expenses });
+    const { categorySummary, categoryTotalSummary } = categorySummaryOf({ categories, summaryRows });
+
+    this.rows = summaryRows;
+    this.categorySummary = categorySummary;
+    this.categoryTotalSummary = categoryTotalSummary;
   }
 }
 
 class SummaryRow extends Array {
-  constructor({ account, yearToDateTotal, prevYearTotal, lastDate, lastAmount }) {
-    super(account, yearToDateTotal, prevYearTotal, lastDate, lastAmount);
+  constructor({ label, account, yearToDateTotal, prevYearTotal, lastDate, lastAmount, kind }) {
+    super(label, account, yearToDateTotal, prevYearTotal, lastDate, lastAmount, kind);
   }
-  account() { return this[0] }
-  yearToDateTotal() { return this[1] }
-  prevYearTotal() { return this[2] }
-  lastDate() { return this[3] }
-  lastAmount() { return this[4] }
+  label() { return this[0] }
+  account() { return this[1] }
+  yearToDateTotal() { return this[2] }
+  prevYearTotal() { return this[3] }
+  lastDate() { return this[4] }
+  lastAmount() { return this[5] }
+  kind() { return this[6] }
 }
 
 Array.prototype.shuffle = function () {  // Knuth shuffle
@@ -135,9 +184,9 @@ Array.prototype.groupBy = function (fn) {
 }
 
 class Format {
-  static day(dt) { return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}` }
-  static weekDay(dt) { return `${Format.weekday[dt.getDay()]} ${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}` }
-  static month(dt) { return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}` }
-  static amount(amnt) { return amnt.toFixed(0) }
+  static day(dt) { return dt === undefined ? '' : `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}` }
+  static weekDay(dt) { return dt === undefined ? '' : `${Format.weekday[dt.getDay()]} ${String(dt.getMonth()+1).padStart(2,'0')}/${String(dt.getDate()).padStart(2,'0')} '${dt.getFullYear().toString().slice(-2)}` }
+  static month(dt) { return dt === undefined ? '' : `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}` }
+  static amount(amnt) { return amnt === undefined ? '' : amnt.toFixed(0) }
   static weekday = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 }
