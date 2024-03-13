@@ -28,7 +28,7 @@ class SummaryTable {
     [document.createElement('tbody')].forEach(tbody => {
       Array.from(this.el.tBodies).shift()?.remove();
 
-      const categories = ['income', 'utilities', 'expense'];  // also determines sections order
+      const categories = ['income', 'utilities', 'medical', 'sport', 'expense'];  // also determines sections order
       const sections = categories.map(category => [
         ...summary.categorySummary.get(category), 
         summary.categoryTotalSummary.get(category)

@@ -112,13 +112,21 @@ class SummaryToDateDataset {
     const categorySummaryOf = ({ categories, summaryRows }) => {
       const expensesAccounts = categories.categoryAccounts.get('expense');
       const incomeAccounts = categories.categoryAccounts.get('income');
+      const medicalAccounts = categories.categoryAccounts.get('medical');
+      const sportAccounts = categories.categoryAccounts.get('sport');
       const utilitiesAccounts = categories.categoryAccounts.get('utilities');
   
       const expensesSummaryRows = summaryRows.filter(row => expensesAccounts.has(row.account()));
       const incomeSummaryRows = summaryRows.filter(row => incomeAccounts.has(row.account()));
+      const medicalSummaryRows = summaryRows.filter(row => medicalAccounts.has(row.account()));
+      const sportSummaryRows = summaryRows.filter(row => sportAccounts.has(row.account()));
       const utilitiesSummaryRows = summaryRows.filter(row => utilitiesAccounts.has(row.account()));
 
-      const expensesNoUtilitiesSummaryRows = expensesSummaryRows.filter(row => !utilitiesAccounts.has(row.account()));
+      const otherExpensesSummaryRows = expensesSummaryRows.filter(row =>
+        !medicalAccounts.has(row.account()) &&
+        !sportAccounts.has(row.account()) &&
+        !utilitiesAccounts.has(row.account())
+      );
       
       const expensesTotalSummaryRow = new SummaryRow(
         Object.assign({ label:'ALL EXPENSES', kind:'all' }, totalSummaryAmount(expensesSummaryRows))
@@ -126,19 +134,29 @@ class SummaryToDateDataset {
       const incomeTotalSummaryRow = new SummaryRow(
         Object.assign({ label: 'ALL INCOME', kind: 'all' }, totalSummaryAmount(incomeSummaryRows))
       );
+      const medicalTotalSummaryRow = new SummaryRow(
+        Object.assign({ label:'MEDICAL', kind:'total' }, totalSummaryAmount(medicalSummaryRows))
+      );
+      const sportTotalSummaryRow = new SummaryRow(
+        Object.assign({ label:'SPORT', kind:'total' }, totalSummaryAmount(sportSummaryRows))
+      );
       const utilitiesTotalSummaryRow = new SummaryRow(
         Object.assign({ label:'UTILITIES', kind:'total' }, totalSummaryAmount(utilitiesSummaryRows))
       );
 
       const categorySummary = new Map([
-        ['expense', expensesNoUtilitiesSummaryRows],
+        ['expense', otherExpensesSummaryRows],
         ['income', incomeSummaryRows],
+        ['medical', medicalSummaryRows],
+        ['sport', sportSummaryRows],
         ['utilities', utilitiesSummaryRows],
       ]);
 
       const categoryTotalSummary = new Map([
         ['expense', expensesTotalSummaryRow],
         ['income', incomeTotalSummaryRow],
+        ['medical', medicalTotalSummaryRow],
+        ['sport', sportTotalSummaryRow],
         ['utilities', utilitiesTotalSummaryRow],
       ]);
   
