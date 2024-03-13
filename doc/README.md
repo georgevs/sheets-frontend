@@ -20,7 +20,7 @@
 
 ### Init
 ```js
-token = app.services.storage.token();
+token = app.services.storage.token()
 await app.services.init({ token })
 ```
 
