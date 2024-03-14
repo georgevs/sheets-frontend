@@ -19,6 +19,19 @@ body {
   background-color: lightgray;
 }
 
+.menu ol {
+  list-style-type: none;
+  padding-left: 0;
+}
+.item {
+  display: inline-block;
+}
+.item:has(+.item) a::after {
+  display: inline-block;
+  content: '|';
+  padding: 0 7px;
+}
+
 table.expenses {
   border-collapse: collapse;
   width: 100%;

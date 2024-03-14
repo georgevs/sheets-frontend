@@ -129,3 +129,37 @@ document.body.replaceChild(app.ui.summary.el, document.body.querySelector('.labe
 document.body.replaceChild(app.ui.summary.el, app.ui.expenses.el)
 document.body.replaceChild(app.ui.expenses.el, app.ui.summary.el)
 ```
+
+### Menu
+```html
+<html>
+  <head>
+    <style>
+      .menu ol {
+        list-style-type: none;
+        padding-left: 0;
+      }
+      .item {
+        display: inline-block;
+      }
+      .item:not(last-child) a::after {
+        display: inline-block;
+        content: '|';
+        font-size: 80%;
+        font-weight: bold;
+        padding: 0 3px;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="menu">
+      <ol>
+        <li class="item"><a>Login</a></li>
+        <li class="item"><a>Logout</a></li>
+        <li class="item"><a>Expenses</a></li>
+        <li class="item"><a>Summary</a></li>
+      </ol>
+    </nav>
+  </body>
+</html>
+```
