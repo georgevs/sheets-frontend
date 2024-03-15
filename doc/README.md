@@ -131,35 +131,16 @@ document.body.replaceChild(app.ui.expenses.el, app.ui.summary.el)
 ```
 
 ### Menu
-```html
-<html>
-  <head>
-    <style>
-      .menu ol {
-        list-style-type: none;
-        padding-left: 0;
-      }
-      .item {
-        display: inline-block;
-      }
-      .item:not(last-child) a::after {
-        display: inline-block;
-        content: '|';
-        font-size: 80%;
-        font-weight: bold;
-        padding: 0 3px;
-      }
-    </style>
-  </head>
-  <body>
-    <nav class="menu">
-      <ol>
-        <li class="item"><a>Login</a></li>
-        <li class="item"><a>Logout</a></li>
-        <li class="item"><a>Expenses</a></li>
-        <li class="item"><a>Summary</a></li>
-      </ol>
-    </nav>
-  </body>
-</html>
+```js
+onClicked = console.log.bind(console, 'onClicked')
+app.ui.menu = new Menu(document.body.querySelector('nav.menu'))
+  .render({
+    visible: true,
+    items: [
+      { id: 'login', label: 'Login', onClicked },
+      { id: 'logout', label: 'Logout', onClicked },
+      { id: 'expenses', label: 'Expenses', onClicked },
+      { id: 'summary', label: 'Summary', onClicked },
+    ]
+  })
 ```

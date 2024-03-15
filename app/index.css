@@ -32,6 +32,11 @@ body {
   padding: 0 7px;
 }
 
+main {
+  flex: 1 1 auto;
+  overflow: auto;
+}
+
 table.expenses {
   border-collapse: collapse;
   width: 100%;

@@ -1,21 +1,19 @@
 window.addEventListener('load', () => { window.app = new App() });
 
-
 class App {
   constructor() {
     this.services = new Services();
-    this.ui = {};  // TODO
+    this.ui = new Ui(document.body);
     this.datasets = {};  // TODO
   }
   
-  // async init() {
-  //   const token = this.services.storage.token();
-  //   await this.services.init({ token });
-
-  //   if (this.services.authenticator.isSignedIn()) {
-  //     this.fetchDatasets();
-  //   }
-  // }
+  async init() {
+    const token = this.services.storage.token();
+    await this.services.init({ token });
+    if (this.services.authenticator.isSignedIn()) {
+      this.fetchDatasets();
+    }
+  }
 
   // async authenticate() {
   //   const token = await app.services.authenticator.signIn();
@@ -58,4 +56,14 @@ class App {
   //   expenses.render({ expenses: this.datasets.expenses });
   //   document.body.replaceChild(this.ui.expenses.el, document.body.querySelector('.label-loading'))
   // }
+}
+
+
+class Ui {
+  constructor(el) {
+    this.el = el;
+    this.menu = new Menu(this.el.querySelector('nav.menu'));
+    this.summary = new SummaryTable(SummaryTable.createElement());
+    this.expenses = new ExpensesTable(ExpensesTable.createElement());
+  }
 }
