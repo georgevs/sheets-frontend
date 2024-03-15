@@ -4,58 +4,61 @@ class App {
   constructor() {
     this.services = new Services();
     this.ui = new Ui(document.body);
-    this.datasets = {};  // TODO
+    this.datasets = {};
   }
-  
+
   async init() {
     const token = this.services.storage.token();
     await this.services.init({ token });
-    if (this.services.authenticator.isSignedIn()) {
-      this.fetchDatasets();
-    }
   }
 
-  // async authenticate() {
-  //   const token = await app.services.authenticator.signIn();
-  //   this.services.storage.setToken(token);
-  //   this.fetchDatasets();
-  // }
+  async signIn() {
+    const token = await this.services.authenticator.signIn();
+    this.services.storage.setToken(token);
+  }
 
-  // async fetchDatasets() {
-  //   const spreadsheetId = '1UbJN1IUOu28ujbab_zkdYrPaoIS3uByk3twBACqTxh4';
-  //   let categories, expenses;
-  //   try {
-  //     categories = await this.services.spreadsheets.getValues({
-  //       spreadsheetId, range: 'CATX'
-  //     });
-  //     expenses = await this.services.spreadsheets.getValues({
-  //       spreadsheetId, range: 'BAL'
-  //     });
-  //   }
-  //   catch (ex) {
-  //     // error { code: 401, status: 'UNAUTHENTICATED' } if invalid token (revoked or expired)
-  //     // error { code: 403, status: 'PERMISSION_DENIED' } if no token
-  //     console.log(ex);
-  //     this.authenticate();
-  //     return;
-  //   }
+  async signOut() {
+    await this.services.authenticator.signOut();
+    this.services.storage.clearToken();
+  }
+
+  async fetchDatasets({ retryAuthenticate } = {}) {
+    const spreadsheetId = '1UbJN1IUOu28ujbab_zkdYrPaoIS3uByk3twBACqTxh4';
+
+    const expensesValues = this.services.spreadsheets.getValues({ spreadsheetId, range: 'BAL' });
+    const categoriesValues = this.services.spreadsheets.getValues({ spreadsheetId, range: 'CATX' });
+
+    let expenses, categories, error;
+
+    try {
+      expenses = new ExpensesDataset({ values: await expensesValues });
+    } catch (ex) {
+      error = ex;
+    }
+    try {
+      categories = new CategoriesDataset({ values: await categoriesValues });
+    } catch (ex) {
+      error = ex;
+    }
     
-  //   this.datasets.expenses = new ExpensesDataset({ values: expenses });
-  //   this.datasets.categories = new CategoriesDataset({ values: categories });
-  //   this.datasets.summary = new SummaryToDateDataset({ 
-  //     expenses: this.datasets.expenses, 
-  //     categories: this.datasets.categories,
-  //     yearToDate: new Date()
-  //   });
+    if (error) {
+      // error { code: 401, status: 'UNAUTHENTICATED' } if invalid token (revoked or expired)
+      // error { code: 403, status: 'PERMISSION_DENIED' } if no token
+      const unauthenticated = error.code === 401 || error.code === 403;
+      if (!unauthenticated || !retryAuthenticate) {
+        throw error;
+      }
+      await this.signIn();
+      await this.fetchDatasets();
+      return;
+    }
 
-  //   this.updateUi();
-  // }
+    const summary = new SummaryToDateDataset({ expenses, categories, yearToDate: new Date() });
 
-  // updateUi() {
-  //   const expenses = this.ui.expenses ??= new ExpensesTable(ExpensesTable.createElement())
-  //   expenses.render({ expenses: this.datasets.expenses });
-  //   document.body.replaceChild(this.ui.expenses.el, document.body.querySelector('.label-loading'))
-  // }
+    this.datasets.expenses = expenses;
+    this.datasets.categories = categories;
+    this.datasets.summary = summary;
+  }
 }
 
 

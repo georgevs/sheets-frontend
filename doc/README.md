@@ -90,10 +90,13 @@ app.datasets.expenses = new ExpensesDataset({ values })
 
 ### Render expenses table
 ```js
-onClicked = console.log.bind(console, 'onClicked')
 app.ui.expenses = new ExpensesTable(ExpensesTable.createElement())
-  .render({ expenses: app.datasets.expenses, onClicked })
-document.body.replaceChild(app.ui.expenses.el, document.body.querySelector('.label-loading'))
+onClicked = console.log.bind(console, 'onClicked')
+app.ui.expenses.render({ expenses: app.datasets.expenses, onClicked })
+
+[document.body.querySelector('.label-loading')].forEach(label =>
+  label.parentElement.replaceChild(app.ui.expenses.el, label);   
+)
 ```
 
 ### Update expenses table
@@ -120,8 +123,11 @@ app.datasets.summary = new SummaryToDateDataset({
 ### Render summary table
 ```js
 app.ui.summary = new SummaryTable(SummaryTable.createElement())
-  .render({ summary: app.datasets.summary })
-document.body.replaceChild(app.ui.summary.el, document.body.querySelector('.label-loading'))
+app.ui.summary.render({ summary: app.datasets.summary })
+
+[document.body.querySelector('.label-loading')].forEach(label =>
+  label.parentElement.replaceChild(app.ui.summary.el, label);   
+)
 ```
 
 ### Swap tables
@@ -132,9 +138,9 @@ document.body.replaceChild(app.ui.expenses.el, app.ui.summary.el)
 
 ### Menu
 ```js
-onClicked = console.log.bind(console, 'onClicked')
 app.ui.menu = new Menu(document.body.querySelector('nav.menu'))
-  .render({
+onClicked = console.log.bind(console, 'onClicked')
+app.ui.menu.render({
     visible: true,
     items: [
       { id: 'login', label: 'Login', onClicked },
