@@ -150,3 +150,24 @@ app.ui.menu.render({
     ]
   })
 ```
+
+### App model
+```js
+class App {
+  constructor() {
+    document.addEventListener('app:action', ({ detail }) => { this.handleEvent(detail) });
+  }
+  dispatch(detail) {
+    document.dispatchEvent(new CustomEvent('app:action', { detail }));
+  }
+  handleEvent(event) {
+    console.log('handleEvent:', event);
+  }
+}
+
+class Actions {
+  static increment({ delta }) { return { increment: { delta } } }
+}
+
+window.app = new App()
+```

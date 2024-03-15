@@ -1,10 +1,19 @@
-window.addEventListener('load', () => { window.app = new App() });
+window.addEventListener('load', () => { (window.app = new App()).dispatch({ init: true }) });
 
 class App {
   constructor() {
     this.services = new Services();
     this.ui = new Ui(document.body);
     this.datasets = {};
+
+    document.addEventListener('app:action', async ({ detail }) => { await this.handleEvent(detail) });
+  }
+
+  dispatch(detail) {
+    document.dispatchEvent(new CustomEvent('app:action', { detail }));
+  }
+  async handleEvent(event) {
+    // TODO
   }
 
   async init() {
