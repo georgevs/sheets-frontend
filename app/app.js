@@ -32,28 +32,22 @@ class App {
 
   async handleSignIn() {
     this.ui.menu.el.classList.toggle('d-none', true);
-
-    // TODO: change message to Signing in...
-    this.ui.main.el.replaceChild(this.ui.loading.el, this.ui.main.el.firstElementChild);
-    this.ui.main.el.classList.toggle('d-none', false);
+    this.ui.render({ message: 'Signing in...' });
 
     await this.signIn();
     this.handleAuthenticated();
   }
 
   async handleSignOut() {
-    // TODO: change message to Signing out...
-
     this.ui.menu.el.classList.toggle('d-none', true);
-    this.ui.main.el.replaceChild(this.ui.loading.el, this.ui.main.el.firstElementChild);
-    this.ui.main.el.classList.toggle('d-none', false);
+    this.ui.render({ message: 'Signing out...' });
 
     await this.signOut();
     this.handleUnauthenticated();
   }
 
   async handleAuthenticated() {
-    // TODO: change message to Loading...
+    this.ui.render({ message: 'Loading...' });
 
     let datasets;
     try {
@@ -163,7 +157,29 @@ class Ui {
     this.menu = new Menu(this.el.querySelector('nav.menu'));
     this.summary = new SummaryTable(SummaryTable.createElement());
     this.expenses = new ExpensesTable(ExpensesTable.createElement());
-    this.loading = { el: this.el.querySelector('.label-loading') };
+    this.message = new MessageLabel(this.el.querySelector('.label-message'));
     this.main = { el: this.el.querySelector('main') };
+  }
+
+  render({ message }) {
+    if (message !== undefined) {
+      this.message.render({ text: message, visible: true });
+      this.main.el.replaceChild(this.message.el, this.main.el.firstElementChild);
+      this.main.el.classList.toggle('d-none', false);
+    }
+  }
+}
+
+class MessageLabel {
+  constructor(el) {
+    this.el = el;
+  }
+  render({ text, visible }) {
+    if (text !== undefined) {
+      this.el.textContent = text.toString();
+    }
+    if (visible !== undefined) {
+      this.el.classList.toggle('d-none', !visible);
+    }
   }
 }
