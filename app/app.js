@@ -1,19 +1,107 @@
-window.addEventListener('load', () => { (window.app = new App()).dispatch({ init: true }) });
+window.addEventListener('load', () => { (window.app = new App()).run() });
 
 class App {
   constructor() {
     this.services = new Services();
     this.ui = new Ui(document.body);
     this.datasets = {};
-
-    document.addEventListener('app:action', async ({ detail }) => { await this.handleEvent(detail) });
   }
 
-  dispatch(detail) {
-    document.dispatchEvent(new CustomEvent('app:action', { detail }));
+  async run() {
+    await this.init();
+
+    let datasets;
+    try {
+      datasets = await this.fetchDatasets({ retryAuthenticate: false });
+    } catch (error) {
+      this.handleUnauthenticated(error);
+      return;
+    }
+    this.handleDatasetsFetched(datasets);
   }
-  async handleEvent(event) {
-    // TODO
+
+  handleUnauthenticated(error) {
+    this.ui.menu.render({
+      visible: true,
+      items: [
+        { id: 'login', label: 'Login', onClicked: this.handleSignIn.bind(this) },
+      ]
+    });
+    this.ui.main.el.classList.toggle('d-none', true);
+  }
+
+  async handleSignIn() {
+    this.ui.menu.el.classList.toggle('d-none', true);
+
+    // TODO: change message to Signing in...
+    this.ui.main.el.replaceChild(this.ui.loading.el, this.ui.main.el.firstElementChild);
+    this.ui.main.el.classList.toggle('d-none', false);
+
+    await this.signIn();
+    this.handleAuthenticated();
+  }
+
+  async handleSignOut() {
+    // TODO: change message to Signing out...
+
+    this.ui.menu.el.classList.toggle('d-none', true);
+    this.ui.main.el.replaceChild(this.ui.loading.el, this.ui.main.el.firstElementChild);
+    this.ui.main.el.classList.toggle('d-none', false);
+
+    await this.signOut();
+    this.handleUnauthenticated();
+  }
+
+  async handleAuthenticated() {
+    // TODO: change message to Loading...
+
+    let datasets;
+    try {
+      datasets = await this.fetchDatasets({ retryAuthenticate: false });
+    } catch (error) {
+      this.handleUnauthenticated(error);
+      return;
+    }
+    this.handleDatasetsFetched(datasets);
+  }
+
+  handleDatasetsFetched(datasets) {
+    this.datasets = datasets;
+
+    const onClicked = console.log.bind(console);  // TODO
+    this.ui.summary.render({ summary: this.datasets.summary, onClicked });
+    this.ui.expenses.render({ expenses: this.datasets.expenses, onClicked });
+    this.ui.menu.render({
+      visible: true,
+      items: [
+        { id: 'expenses', label: 'Expenses', onClicked: this.handleShowExpenses.bind(this)},
+        { id: 'logout', label: 'Logout', onClicked: this.handleSignOut.bind(this) },
+      ]
+    });
+    this.ui.main.el.replaceChild(this.ui.summary.el, this.ui.main.el.firstElementChild);
+    this.ui.menu.el.classList.toggle('d-none', false);
+  }
+
+  handleShowSummary() {
+    this.ui.menu.render({
+      visible: true,
+      items: [
+        { id: 'expenses', label: 'Expenses', onClicked: this.handleShowExpenses.bind(this)},
+        { id: 'logout', label: 'Logout', onClicked: this.handleSignOut.bind(this) },
+      ]
+    });
+    this.ui.main.el.replaceChild(this.ui.summary.el, this.ui.main.el.firstElementChild);
+  }
+
+  handleShowExpenses() {
+    this.ui.menu.render({
+      visible: true,
+      items: [
+        { id: 'summary', label: 'Summary', onClicked: this.handleShowSummary.bind(this)},
+        { id: 'logout', label: 'Logout', onClicked: this.handleSignOut.bind(this) },
+      ]
+    });
+    this.ui.main.el.replaceChild(this.ui.expenses.el, this.ui.main.el.firstElementChild);
   }
 
   async init() {
@@ -64,9 +152,7 @@ class App {
 
     const summary = new SummaryToDateDataset({ expenses, categories, yearToDate: new Date() });
 
-    this.datasets.expenses = expenses;
-    this.datasets.categories = categories;
-    this.datasets.summary = summary;
+    return { expenses, categories, summary };
   }
 }
 
@@ -77,5 +163,7 @@ class Ui {
     this.menu = new Menu(this.el.querySelector('nav.menu'));
     this.summary = new SummaryTable(SummaryTable.createElement());
     this.expenses = new ExpensesTable(ExpensesTable.createElement());
+    this.loading = { el: this.el.querySelector('.label-loading') };
+    this.main = { el: this.el.querySelector('main') };
   }
 }

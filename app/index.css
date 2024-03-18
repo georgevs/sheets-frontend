@@ -26,6 +26,10 @@ body {
 .item {
   display: inline-block;
 }
+.item:hover {
+  text-decoration: underline;
+  cursor: pointer;
+}
 .item:has(+.item) a::after {
   display: inline-block;
   content: '|';
