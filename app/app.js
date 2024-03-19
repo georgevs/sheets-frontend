@@ -62,8 +62,15 @@ class App {
       }
     };
 
-    this.ui.summary.render({ summary: this.datasets.summary, onClicked: handleSummaryClicked });
-    this.ui.expenses.render({ expenses: this.datasets.expenses, onClicked: handleExpensesClicked });
+    this.ui.summary.render({ 
+      summary: this.datasets.summary, 
+      onClicked: handleSummaryClicked
+    });
+    this.ui.expenses.render({
+      categories: this.datasets.categories,
+      expenses: this.datasets.expenses,
+      onClicked: handleExpensesClicked
+    });
 
     this.ui.menu.render({
       items: [

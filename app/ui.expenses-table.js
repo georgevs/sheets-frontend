@@ -9,11 +9,11 @@ class ExpensesTable {
     return el;
   }
 
-  render({ expenses, filter, onClicked, visible }) {
+  render({ categories, expenses, filter, onClicked, visible }) {
     const header = ['DT', 'AMNT', 'ACCT'];  // also determines columns order
 
-    if (expenses) {
-      this.renderExpenses({ header, expenses });
+    if (categories && expenses) {
+      this.renderExpenses({ header, categories, expenses });
     }
     if (filter) {
       this.applyFilter({ header, filter });
@@ -28,7 +28,7 @@ class ExpensesTable {
     return this;
   }
 
-  renderExpenses({ header, expenses }) {
+  renderExpenses({ header, categories, expenses }) {
     [document.createElement('thead')].forEach(thead => {
       this.el.tHead?.remove();
       [document.createElement('tr')].forEach(tr => {
@@ -46,8 +46,9 @@ class ExpensesTable {
       Array.from(this.el.tBodies).shift()?.remove();
       expenses.rows.map(row => [row, document.createElement('tr')])
         .forEach(([row, tr]) => {
+          const account = row.account();
           const rowValues = new Map([
-            ['ACCT', row.account()],
+            ['ACCT', account],
             ['AMNT', Format.amount(row.amount())], 
             ['DT', Format.weekDay(row.date())], 
           ]);
@@ -61,13 +62,13 @@ class ExpensesTable {
               tr.appendChild(td);
             });
 
-          tr.dataset.account = row.account();
+          tr.dataset.account = account;
           tr.dataset.day = Format.day(row.date());
           tr.dataset.month = Format.month(row.date());
 
-          // tr.classList.toggle('expenses', ...);
-          // tr.classList.toggle('utilities', ...);
-          // tr.classList.toggle('income', ...);
+          ['expense', 'utilities', 'income'].forEach(category => {
+            tr.classList.toggle(category, categories.categoryAccounts.get(category).has(account));
+          });
 
           tbody.appendChild(tr);
         });

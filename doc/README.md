@@ -64,7 +64,11 @@ app.datasets.expenses = new ExpensesDataset({ values })
 ```js
 app.ui.expenses = new ExpensesTable(ExpensesTable.createElement())
 onClicked = console.log.bind(console, 'onClicked')
-app.ui.expenses.render({ expenses: app.datasets.expenses, onClicked })
+app.ui.expenses.render({
+  expenses: app.datasets.expenses, 
+  categories: app.datasets.categories, 
+  onClicked 
+})
 
 [document.body.querySelector('main')].forEach(main => {
   main.replaceChild(app.ui.expenses.el, main.firstElementChild)

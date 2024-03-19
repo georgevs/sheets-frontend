@@ -52,25 +52,23 @@ table.expenses thead tr {
   position: sticky;
   top: 0px;
 }
-table.expenses tbody tr td[data-col='AMNT'] {
-  color: darkgray;
-}
 table.expenses tbody td {
   padding: 0px 5px;
 }
 table.expenses tbody td.amount {
+  color: darkgray;
   text-align: right;
 }
-table.expenses tbody tr.expenses td[data-col='AMNT'] {
+table.expenses tbody tr.expense td.amount {
   color: inherit;
 }
-table.expenses tbody tr.utilities td[data-col='AMNT'] {
-  font-weight: bolder;
+table.expenses tbody tr.utilities td.amount {
   color: orangered;
-}
-table.expenses tbody tr.income td[data-col='AMNT'] {
   font-weight: bolder;
+}
+table.expenses tbody tr.income td.amount {
   color: forestgreen;
+  font-weight: bolder;
 }
 
 table.summary {
