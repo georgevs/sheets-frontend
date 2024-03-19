@@ -60,43 +60,15 @@ values = await app.services.spreadsheets.getValues({
 app.datasets.expenses = new ExpensesDataset({ values })
 ```
 
-### Test values
-```js
-values = JSON.parse(
-  `[
-    [ "DT", "AMNT", "ACCT" ],
-    [ "2024-02-29", 100.75, "food" ],
-    [ "2024-02-27", 200.75, "games" ],
-    [ "2024-02-26", 300.75, "fitness" ],
-    [ "2024-02-26", 400.75, "food" ],
-    [ "2024-02-25", 500.75, "leisure" ],
-    [ "2024-02-23", 600.75, "fee" ],
-    [ "2024-01-19", 10.75, "food" ],
-    [ "2024-01-17", 20.75, "games" ],
-    [ "2024-01-16", 30.75, "fitness" ],
-    [ "2024-01-16", 40.75, "food" ],
-    [ "2024-01-15", 50.75, "leisure" ],
-    [ "2024-01-13", 60.75, "fee" ],
-    [ "2023-01-19", 1.75, "food" ],
-    [ "2023-01-17", 2.75, "games" ],
-    [ "2023-01-16", 3.75, "fitness" ],
-    [ "2023-01-16", 4.75, "food" ],
-    [ "2023-01-15", 5.75, "leisure" ],
-    [ "2023-01-13", 6.75, "fee" ]
-  ]`
-)
-app.datasets.expenses = new ExpensesDataset({ values })
-```
-
 ### Render expenses table
 ```js
 app.ui.expenses = new ExpensesTable(ExpensesTable.createElement())
 onClicked = console.log.bind(console, 'onClicked')
 app.ui.expenses.render({ expenses: app.datasets.expenses, onClicked })
 
-[document.body.querySelector('.label-loading')].forEach(label =>
-  label.parentElement.replaceChild(app.ui.expenses.el, label);   
-)
+[document.body.querySelector('main')].forEach(main => {
+  main.replaceChild(app.ui.expenses.el, main.firstElementChild)
+})
 ```
 
 ### Update expenses table
@@ -125,15 +97,9 @@ app.datasets.summary = new SummaryToDateDataset({
 app.ui.summary = new SummaryTable(SummaryTable.createElement())
 app.ui.summary.render({ summary: app.datasets.summary })
 
-[document.body.querySelector('.label-loading')].forEach(label =>
-  label.parentElement.replaceChild(app.ui.summary.el, label);   
-)
-```
-
-### Swap tables
-```js
-document.body.replaceChild(app.ui.summary.el, app.ui.expenses.el)
-document.body.replaceChild(app.ui.expenses.el, app.ui.summary.el)
+[document.body.querySelector('main')].forEach(main => {
+  main.replaceChild(app.ui.summary.el, main.firstElementChild)
+})
 ```
 
 ### Menu
@@ -141,12 +107,11 @@ document.body.replaceChild(app.ui.expenses.el, app.ui.summary.el)
 app.ui.menu = new Menu(document.body.querySelector('nav.menu'))
 onClicked = console.log.bind(console, 'onClicked')
 app.ui.menu.render({
-    visible: true,
-    items: [
-      { id: 'login', label: 'Login', onClicked },
-      { id: 'logout', label: 'Logout', onClicked },
-      { id: 'expenses', label: 'Expenses', onClicked },
-      { id: 'summary', label: 'Summary', onClicked },
-    ]
-  })
+  items: [
+    { id: 'login', label: 'Login', onClicked },
+    { id: 'logout', label: 'Logout', onClicked },
+    { id: 'expenses', label: 'Expenses', onClicked },
+    { id: 'summary', label: 'Summary', onClicked },
+  ]
+})
 ```

@@ -4,10 +4,12 @@ class Menu {
     el.classList.add('menu', ...classNames);
     return el;
   }
+
   constructor(el) {
     this.el = el;
     this.items = new Map();
   }
+
   render({ visible, items }) {
     if (items) {
       [document.createElement('ol')].forEach(ol => {
@@ -20,6 +22,7 @@ class Menu {
           });
         this.el.appendChild(ol);
       });
+      visible = true;  // enforce visible
     }
     if (visible !== undefined) {
       this.el.classList.toggle('d-none', !visible);
@@ -34,18 +37,17 @@ class MenuItem {
     el.classList.add('item', ...classNames);
     return el;
   }
+
   constructor(el) {
     this.el = el;
   }
-  render({ id, label, visible, onClicked }) {
+
+  render({ id, label, onClicked, visible }) {
     if (label) {
       [document.createElement('a')].forEach(link => {
         link.textContent = label.toString();
         this.el.appendChild(link);
       });
-    }
-    if (visible !== undefined) {
-      this.el.classList.toggle('d-none', !visible);
     }
     if (onClicked) {
       if (this.removeClickedHandler) {
@@ -58,6 +60,9 @@ class MenuItem {
       this.removeClickedHandler = () => {
         tbody.removeEventListener('click', handleClicked);
       };
+    }
+    if (visible !== undefined) {
+      this.el.classList.toggle('d-none', !visible);
     }
     return this;
   }

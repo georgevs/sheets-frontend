@@ -9,19 +9,26 @@ class ExpensesTable {
     return el;
   }
 
-  render({ expenses, filter, onClicked }) {
+  render({ expenses, filter, onClicked, visible }) {
     const header = ['DT', 'AMNT', 'ACCT'];  // also determines columns order
 
-    this.renderExpenses({ header, expenses });
-    this.applyFilter({ header, filter });
-    this.updateHandlers({ header, onClicked });
+    if (expenses) {
+      this.renderExpenses({ header, expenses });
+    }
+    if (filter) {
+      this.applyFilter({ header, filter });
+    }
+    if (onClicked) {
+      this.updateHandlers({ header, onClicked });
+    }
+    if (visible !== undefined) {
+      this.el.classList.toggle('d-none', !visible);
+    }
 
     return this;
   }
 
   renderExpenses({ header, expenses }) {
-    if (!expenses) { return }
-
     [document.createElement('thead')].forEach(thead => {
       this.el.tHead?.remove();
       [document.createElement('tr')].forEach(tr => {
@@ -57,10 +64,6 @@ class ExpensesTable {
           tr.dataset.account = row.account();
           tr.dataset.day = Format.day(row.date());
           tr.dataset.month = Format.month(row.date());
-
-          // const categories = Array.from(accountsByCategory.entries())
-          //   .flatMap(([category, categoryAccounts]) => categoryAccounts.has(account) ? [category] : []);
-          // tr.classList.add(...categories);
 
           tbody.appendChild(tr);
         });
@@ -99,24 +102,22 @@ class ExpensesTable {
   }
 
   updateHandlers({ header, onClicked }) {
-    if (onClicked) {
-      if (this.removeClickedHandler) {
-        this.removeClickedHandler();
-      }
-      Array.from(this.el.tBodies).forEach(tbody => {
-        function handleTBodyClick(event) {
-          if (event.target instanceof HTMLTableCellElement) {
-            const col = header[event.target.cellIndex];
-            const dataset = event.target.parentElement.dataset; // DOMStringMap
-            onClicked(Object.assign({}, dataset, { col }));
-          }
-        }
-        tbody.addEventListener('click', handleTBodyClick);
-        this.removeClickedHandler = () => {
-          tbody.removeEventListener('click', handleTBodyClick);
-        };
-      });
+    if (this.removeClickedHandler) {
+      this.removeClickedHandler();
     }
+    Array.from(this.el.tBodies).forEach(tbody => {
+      function handleTBodyClick(event) {
+        if (event.target instanceof HTMLTableCellElement) {
+          const col = header[event.target.cellIndex];
+          const dataset = event.target.parentElement.dataset; // DOMStringMap
+          onClicked(Object.assign({}, dataset, { col }));
+        }
+      }
+      tbody.addEventListener('click', handleTBodyClick);
+      this.removeClickedHandler = () => {
+        tbody.removeEventListener('click', handleTBodyClick);
+      };
+    });
   }
 
   static highlightSameDayRows(state, tr) {

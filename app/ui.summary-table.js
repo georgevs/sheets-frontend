@@ -9,9 +9,20 @@ class SummaryTable {
     return el;
   }
 
-  render({ summary }) {
-    const header = ['ACCT', 'YTDT', 'PYT', 'LDT', 'LAMNT'];  // also determines columns order
+  render({ summary, visible }) {
+    const header = ['ACC', 'YTD', 'PYT', 'LDT', 'LAM'];  // also determines columns order
 
+    if (summary) {
+      this.renderSummary({ header, summary });
+    }
+    if (visible !== undefined) {
+      this.el.classList.toggle('d-none', !visible);
+    }
+
+    return this;
+  }
+
+  renderSummary({ header, summary }) {
     [document.createElement('thead')].forEach(thead => {
       this.el.tHead?.remove();
       [document.createElement('tr')].forEach(tr => {
@@ -38,16 +49,16 @@ class SummaryTable {
           .forEach(([row, tr]) => {
             const account = row.account() ?? row.label();
             const rowValues = new Map([
-              ['ACCT', account],
-              ['LAMNT', Format.amount(row.lastAmount())],
-              ['LDT', Format.weekDay(row.lastDate())],
+              ['ACC', account],
+              ['LAM', Format.amount(row.lastAmount())],
+              ['LDT', Format.shortDay(row.lastDate())],
               ['PYT', Format.amount(row.prevYearTotal())],
-              ['YTDT', Format.amount(row.yearToDateTotal())],
+              ['YTD', Format.amount(row.yearToDateTotal())],
             ]);
             const colClassNames = new Map([
-              ['LAMNT', ['amount']],
+              ['LAM', ['amount']],
               ['PYT', ['amount']],
-              ['YTDT', ['amount']],
+              ['YTD', ['amount']],
             ]);
             header.map(col => [colClassNames.get(col), document.createTextNode(rowValues.get(col)), document.createElement('td')])
               .forEach(([classNames, text, td]) => {
@@ -64,7 +75,5 @@ class SummaryTable {
 
       this.el.appendChild(tbody);
     });
-
-    return this;
   }
 }

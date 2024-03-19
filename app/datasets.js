@@ -203,7 +203,8 @@ Array.prototype.groupBy = function (fn) {
 
 class Format {
   static day(dt) { return dt === undefined ? '' : `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}` }
-  static weekDay(dt) { return dt === undefined ? '' : `${Format.weekday[dt.getDay()]} ${String(dt.getMonth()+1).padStart(2,'0')}/${String(dt.getDate()).padStart(2,'0')} '${dt.getFullYear().toString().slice(-2)}` }
+  static weekDay(dt) { return dt === undefined ? '' : `${String(dt.getMonth()+1).padStart(2,'0')}/${String(dt.getDate()).padStart(2,'0')}'${dt.getFullYear().toString().slice(-2)} ${Format.weekday[dt.getDay()]}` }
+  static shortDay(dt) { return dt === undefined ? '' : `${String(dt.getMonth()+1).padStart(2,'0')}/${String(dt.getDate()).padStart(2,'0')}'${dt.getFullYear().toString().slice(-2)}` }
   static month(dt) { return dt === undefined ? '' : `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}` }
   static amount(amnt) { return amnt === undefined ? '' : amnt.toFixed(0) }
   static weekday = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
