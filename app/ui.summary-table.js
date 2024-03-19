@@ -9,11 +9,14 @@ class SummaryTable {
     return el;
   }
 
-  render({ summary, visible }) {
-    const header = ['ACC', 'YTD', 'PYT', 'LDT', 'LAM'];  // also determines columns order
+  render({ onClicked, summary, visible }) {
+    const header = ['ACCT', 'YTD', 'PYT', 'LDT', 'LAM'];  // also determines columns order
 
     if (summary) {
       this.renderSummary({ header, summary });
+    }
+    if (onClicked) {
+      this.updateHandlers({ header, onClicked });
     }
     if (visible !== undefined) {
       this.el.classList.toggle('d-none', !visible);
@@ -49,7 +52,7 @@ class SummaryTable {
           .forEach(([row, tr]) => {
             const account = row.account() ?? row.label();
             const rowValues = new Map([
-              ['ACC', account],
+              ['ACCT', account],
               ['LAM', Format.amount(row.lastAmount())],
               ['LDT', Format.shortDay(row.lastDate())],
               ['PYT', Format.amount(row.prevYearTotal())],
@@ -66,14 +69,36 @@ class SummaryTable {
                 td.appendChild(text);
                 tr.appendChild(td);
               });
-
+              
+            tr.dataset.account = row.account();
+            
             tr.classList.toggle('total', row.kind() === 'total' || row.kind() === 'all');
-            tr.classList.toggle('all', row.kind() === 'all');
+            tr.classList.toggle('all', row.kind() === 'all');  
+
             tbody.appendChild(tr);
           });
       });
 
       this.el.appendChild(tbody);
+    });
+  }
+  
+  updateHandlers({ header, onClicked }) {
+    if (this.removeClickedHandler) {
+      this.removeClickedHandler();
+    }
+    Array.from(this.el.tBodies).forEach(tbody => {
+      function handleTBodyClick(event) {
+        if (event.target instanceof HTMLTableCellElement) {
+          const col = header[event.target.cellIndex];
+          const dataset = event.target.parentElement.dataset; // DOMStringMap
+          onClicked(Object.assign({}, dataset, { col }));
+        }
+      }
+      tbody.addEventListener('click', handleTBodyClick);
+      this.removeClickedHandler = () => {
+        tbody.removeEventListener('click', handleTBodyClick);
+      };
     });
   }
 }

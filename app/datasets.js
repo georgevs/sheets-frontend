@@ -209,3 +209,22 @@ class Format {
   static amount(amnt) { return amnt === undefined ? '' : amnt.toFixed(0) }
   static weekday = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 }
+
+class ExpensesFilter extends Object {
+  constructor(...xss) {
+    super();
+    this.toggle(...xss);
+  }
+
+  toggle(...xss) {
+    for (let xs of xss) {
+      if (xs) {
+        for (let k in xs) {
+          if (this[k] === undefined) { this[k] = xs[k] }
+          else { delete this[k] }
+        }
+      }
+    }
+    return this;
+  }
+}

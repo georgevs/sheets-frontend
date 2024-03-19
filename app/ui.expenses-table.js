@@ -65,6 +65,10 @@ class ExpensesTable {
           tr.dataset.day = Format.day(row.date());
           tr.dataset.month = Format.month(row.date());
 
+          // tr.classList.toggle('expenses', ...);
+          // tr.classList.toggle('utilities', ...);
+          // tr.classList.toggle('income', ...);
+
           tbody.appendChild(tr);
         });
 

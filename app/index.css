@@ -19,19 +19,19 @@ body {
   background-color: lightgray;
 }
 
-.menu ol {
+nav.menu ol {
   list-style-type: none;
   padding-left: 0;
   margin: 0px;
 }
-.item {
+nav.menu .item {
   display: inline-block;
 }
-.item:hover {
+nav.menu .item:hover {
   text-decoration: underline;
   cursor: pointer;
 }
-.item:has(+.item) a::after {
+nav.menu .item:has(+.item) a::after {
   display: inline-block;
   content: '|';
   padding: 0 7px;

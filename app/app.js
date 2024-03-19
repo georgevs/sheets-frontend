@@ -5,6 +5,7 @@ class App {
     this.services = new Services();
     this.ui = new Ui(document.body);
     this.datasets = {};
+    this.expensesFilter = new ExpensesFilter();
   }
 
   async run() {
@@ -47,9 +48,22 @@ class App {
   handleDatasetsFetched(datasets) {
     this.datasets = datasets;
 
-    const onClicked = console.log.bind(console);  // TODO
-    this.ui.summary.render({ summary: this.datasets.summary, onClicked });
-    this.ui.expenses.render({ expenses: this.datasets.expenses, onClicked });
+    const handleExpensesClicked = ({ account, month, col }) => {
+      const filter = this.expensesFilter.toggle(
+        col === 'ACCT' && { account },
+        col === 'DT' && { month },
+      );
+      this.ui.expenses.render({ filter });
+    };
+    
+    const handleSummaryClicked = ({ account, col }) => {
+      if (col === 'ACCT') {
+        this.showExpenses({ filter: { account } });
+      }
+    };
+
+    this.ui.summary.render({ summary: this.datasets.summary, onClicked: handleSummaryClicked });
+    this.ui.expenses.render({ expenses: this.datasets.expenses, onClicked: handleExpensesClicked });
 
     this.ui.menu.render({
       items: [
@@ -84,7 +98,10 @@ class App {
     this.fetchDatasets();
   }
 
-  showExpenses() {
+  showExpenses({ filter = {} } = {}) {
+    this.expensesFilter = new ExpensesFilter(filter);
+
+    this.ui.expenses.render({ filter });
     this.ui.menu.render({
       items: [
         { id: 'summary', label: 'Summary', onClicked: this.showSummary.bind(this)},
