@@ -1,33 +1,18 @@
-window.addEventListener('load', () => { (window.app = new App(new Config())).run() });
-
-
-class Config {
+class DemoApp {
   constructor() {
-    this.spreadsheetId = '1UbJN1IUOu28ujbab_zkdYrPaoIS3uByk3twBACqTxh4';
-  }
-}
-
-class App {
-  constructor(config) {
-    this.config = config;
-    this.services = new Services();
+    this.services = new DemoServices();
     this.ui = new Ui(document.body);
     this.datasets = {};
     this.expensesFilter = new ExpensesFilter();
   }
 
   async run() {
-    const token = this.services.storage.token();
-    await this.services.init({ token });
-
     this.fetchDatasets();
   }
 
   async fetchDatasets() {
-    const spreadsheetId = this.config.spreadsheetId;
-
-    const expensesValues = this.services.spreadsheets.getValues({ spreadsheetId, range: 'BAL' });
-    const categoriesValues = this.services.spreadsheets.getValues({ spreadsheetId, range: 'CATX' });
+    const expensesValues = this.services.datasets.fetchExpensesValues();
+    const categoriesValues = this.services.datasets.fetchCategoriesValues();
 
     let expenses, categories, error;
     try {
@@ -82,8 +67,8 @@ class App {
 
     this.ui.menu.render({
       items: [
-        { id: 'expenses', label: 'Expenses', onClicked: this.showExpenses.bind(this)},
-        { id: 'logout', label: 'Logout', onClicked: this.signOut.bind(this) },
+        { label: 'Expenses', onClicked: this.showExpenses.bind(this)},
+        { label: 'Leave demo', onClicked: this.leaveDemo.bind(this) },
       ]
     });
     this.ui.main.render({ present: this.ui.summary });
@@ -92,30 +77,14 @@ class App {
   showUnauthenticated(error) {
     this.ui.menu.render({
       items: [
-        { id: 'login', label: 'Login', onClicked: this.signIn.bind(this) },
-        { id: 'demo', label: 'Demo', onClicked: this.enterDemo.bind(this) },
+        { label: 'Leave demo', onClicked: this.leaveDemo.bind(this) },
       ]
     });
     this.ui.main.render({ visible: false });
   }
 
-  enterDemo() {
-    (window.app = new DemoApp()).run();
-  }
-
-  async signIn() {
-    this.ui.menu.render({ visible: false });
-    this.ui.render({ message: 'Signing in...' });
-
-    const token = await this.services.authenticator.signIn();
-    this.services.storage.setToken(token);
-
-    this.handleAuthenticated();
-  }
-
-  async handleAuthenticated() {
-    this.ui.render({ message: 'Loading...' });
-    this.fetchDatasets();
+  async leaveDemo() {
+    (window.app = new App(new Config())).run();
   }
 
   showExpenses({ filter = {} } = {}) {
@@ -125,7 +94,7 @@ class App {
     this.ui.menu.render({
       items: [
         { id: 'summary', label: 'Summary', onClicked: this.showSummary.bind(this)},
-        { id: 'logout', label: 'Logout', onClicked: this.signOut.bind(this) },
+        { label: 'Leave demo', onClicked: this.leaveDemo.bind(this) },
       ]
     });
     this.ui.main.render({ present: this.ui.expenses });
@@ -135,19 +104,29 @@ class App {
     this.ui.menu.render({
       items: [
         { id: 'expenses', label: 'Expenses', onClicked: this.showExpenses.bind(this)},
-        { id: 'logout', label: 'Logout', onClicked: this.signOut.bind(this) },
+        { label: 'Leave demo', onClicked: this.leaveDemo.bind(this) },
       ]
     });
     this.ui.main.render({ present: this.ui.summary });
   }
+}
 
-  async signOut() {
-    this.ui.menu.render({ visible: false });
-    this.ui.render({ message: 'Signing out...' });
+class DemoServices {
+  constructor() {
+    this.datasets = new DemoDatasets();
+  }
+}
 
-    await this.services.authenticator.signOut();
-    this.services.storage.clearToken();
-
-    this.showUnauthenticated();
+class DemoDatasets {
+  async fetchExpensesValues() {
+    return fetch('demo/BAL.json')
+      .then(response => response.json())
+      .then(({ values }) => values);
+  }
+  
+  async fetchCategoriesValues() {
+    return fetch('demo/CATX.json')
+      .then(response => response.json())
+      .then(({ values }) => values);
   }
 }

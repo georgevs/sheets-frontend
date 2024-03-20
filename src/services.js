@@ -1,5 +1,5 @@
 class Services {
-  constructor() {
+  constructor(config) {
     this.storage = new Storage(window.localStorage);
   }
 

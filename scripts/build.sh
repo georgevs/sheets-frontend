@@ -4,6 +4,7 @@ mkdir -p ./dist
 rm -rf ./dist/*
 
 cp ./src/index.* ./dist
+tar -cC ./data demo | tar -xvC ./dist
 
 find ./src -type f -name '*.js' | xargs cat > ./dist/app.js
 HASH=`md5sum ./dist/app.js` ; \
