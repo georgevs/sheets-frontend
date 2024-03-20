@@ -6,6 +6,12 @@
 openssl enc -d -aes-128-cbc -pbkdf2 -salt -in ~/ws-archive/secrets.pilot.tar.gz.enc | tar xzv
 ```
 
+## Build
+```bash
+chmod ugo+x ./scripts/build.sh
+./scripts/build.sh
+```
+
 ## Run the app locally
 
 ### Install live certificates
@@ -14,16 +20,8 @@ openssl enc -aes-128-cbc -pbkdf2 -salt -d -in ~/ws-archive/certs.tar.gz.enc | ta
 ```
 ### Start web server in Docker
 ```
-docker container run --rm \
-  --name node-app \
-  --network bridge-dev \
-  --ip 172.20.0.100 \
-  --user node \
-  --workdir /home/node \
-  --volume "$PWD/app:/home/node/app" \
-  --volume "$PWD/certs:/home/node/certs" \
-  --publish 3443:3443 \
-  node npx http-server ./app -c-1 --ssl -p 3443 --cert ./certs/cert.pem --key ./certs/cert-key-nopassword.pem
+chmod ugo+x ./scripts/start.sh
+./scripts/start.sh
 ```
 Open site at https://xps.spamfro.site:3443 (in LAN) or https://local.spamfro.site:3443 (with forward proxy)
 
@@ -37,7 +35,7 @@ git push git@github-spamfro:spamfro/sheets-js.git github/sheets-js:main
 
 ### Deploy to GitHub pages
 ```
-git subtree split --prefix playground/google-apis/sheets-js/app -b gh-pages/sheets-js
+git subtree split --prefix playground/google-apis/sheets-js/dist -b gh-pages/sheets-js
 git push git@github-spamfro:spamfro/sheets-js.git gh-pages/sheets-js:gh-pages
 ```
 Open site at https://spamfro.site/sheets-js
