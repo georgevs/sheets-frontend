@@ -1,0 +1,104 @@
+* {
+  box-sizing: border-box;
+}
+body {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  margin: 0px;
+  padding: 8px;
+  position: absolute;
+  row-gap: 8px;
+  width: 100%;
+}
+.d-none {
+  display: none;
+}
+
+.highlighted {
+  background-color: lightgray;
+}
+
+nav.menu ol {
+  list-style-type: none;
+  padding-left: 0;
+  margin: 0px;
+}
+nav.menu .item {
+  display: inline-block;
+}
+nav.menu .item:hover {
+  text-decoration: underline;
+  cursor: pointer;
+}
+nav.menu .item:has(+.item) a::after {
+  display: inline-block;
+  content: '|';
+  padding: 0 7px;
+}
+
+main {
+  flex: 1 1 auto;
+  overflow: auto;
+}
+
+table.expenses {
+  border-collapse: collapse;
+  width: 100%;
+}
+table.expenses thead tr {
+  background-color: gray;
+  color: white;
+  position: sticky;
+  top: 0px;
+}
+table.expenses tbody td {
+  padding: 0px 5px;
+}
+table.expenses tbody td.amount {
+  color: darkgray;
+  text-align: right;
+}
+table.expenses tbody tr.expense td.amount {
+  color: inherit;
+}
+table.expenses tbody tr.utilities td.amount {
+  color: orangered;
+  font-weight: bolder;
+}
+table.expenses tbody tr.income td.amount {
+  color: forestgreen;
+  font-weight: bolder;
+}
+
+table.summary {
+  border-collapse: collapse;
+  width: 100%;
+}
+table.summary thead tr {
+  background-color: gray;
+  color: white;
+  position: sticky;
+  top: 0px;
+}
+table.summary tbody td {
+  padding: 0px 5px;
+}
+table.summary tbody td.amount {
+  text-align: right;
+}
+table.summary tbody tr:has(+tr.total) td {
+  padding-bottom: 10px;
+}
+table.summary tbody tr.total {
+  border-top: 1px solid black;  
+}
+table.summary tbody tr.all {
+  border-top: 3px double black; 
+}
+table.summary tbody tr.total td {
+  padding-bottom: 20px;  
+}
+table.summary tbody tr:last-child td {
+  padding-bottom: inherit;
+}
