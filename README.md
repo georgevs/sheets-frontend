@@ -29,13 +29,13 @@ Open site at https://xps.spamfro.site:3443 (in LAN) or https://local.spamfro.sit
 
 ### Push source subtree into GitHub
 ```
-git subtree split --prefix playground/google-apis/sheets-js -b github/sheets-js
-git push git@github-spamfro:spamfro/sheets-js.git github/sheets-js:main
+git subtree split -p playground/google-apis/sheets-js -b github/sheets-js
+git push git@github.com:spamfro/sheets-js.git github/sheets-js:main
 ```
 
 ### Deploy to GitHub pages
 ```
-git subtree split --prefix playground/google-apis/sheets-js/dist -b gh-pages/sheets-js
-git push git@github-spamfro:spamfro/sheets-js.git gh-pages/sheets-js:gh-pages
+git subtree split -p playground/google-apis/sheets-js/dist -b gh-pages/sheets-js
+git push git@github.com:spamfro/sheets-js.git gh-pages/sheets-js:gh-pages
 ```
 Open site at https://spamfro.site/sheets-js
